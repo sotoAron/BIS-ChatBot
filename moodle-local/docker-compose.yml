@@ -1,0 +1,36 @@
+services:
+  mariadb:
+    image: mariadb:10.11
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword123!
+      - MYSQL_DATABASE=moodle
+      - MYSQL_USER=moodleuser
+      - MYSQL_PASSWORD=moodlepass
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  moodle:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      # ── JWT Secret (mínimo 32 caracteres) ────────────────────────────────
+      # IMPORTANTE: Cambia este valor por uno generado con:
+      #   openssl rand -hex 32
+      # En producción, gestiona este secreto con Docker Secrets o un vault.
+      - IA_CHATBOT_JWT_SECRET=402fc84f40704ee67996b0d314a9dc806c191233f911a4ad6d6c4f3ab6f9faa3
+    volumes:
+      - moodle_data:/var/www/html
+      - moodledata_data:/var/www/moodledata
+      # ── Plugin bind-mount (desarrollo) ────────────────────────────────────
+      # Monta el plugin directamente en el directorio local/ de Moodle.
+      # Cualquier cambio en moodle_codigo/local/ia_chatbot/ se refleja
+      # inmediatamente en el contenedor sin reconstruir la imagen.
+      - ./moodle_codigo/local/ia_chatbot:/var/www/html/local/ia_chatbot
+    depends_on:
+      - mariadb
+
+volumes:
+  mariadb_data:
+  moodle_data:
+  moodledata_data:
