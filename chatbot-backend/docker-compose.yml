@@ -1,0 +1,128 @@
+# docker-compose.yml — Backend IA Chatbot (Fase 2)
+#
+# Servicios:
+#   backend   → FastAPI + uvicorn (puerto 8000)
+#   redis     → Redis 7 (rate limiting + caché semántica + historial)
+#   ollama    → Ollama con Qwen 2.5 3B (LLM local, puerto 11434)
+#   chromadb  → ChromaDB embebido (vector store RAG, puerto 8001)
+#
+# Red interna: chatbot_net (bridge) — los servicios se resuelven por nombre.
+# JWT_SECRET DEBE coincidir con IA_CHATBOT_JWT_SECRET en moodle-local/.env
+
+services:
+
+  # ── Backend FastAPI ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatbot_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env                    # Lee JWT_SECRET y demás vars desde .env
+    environment:
+      # ── El secreto JWT DEBE ser idéntico al de Moodle ──────────────────────
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env}
+      # ── Servicios ──────────────────────────────────────────────────────────
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:3b}
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      # ── Embeddings ─────────────────────────────────────────────────────────
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-paraphrase-multilingual-MiniLM-L12-v2}
+      # ── Rate Limiting ──────────────────────────────────────────────────────
+      - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-5}
+      - RATE_LIMIT_WINDOW_SECONDS=${RATE_LIMIT_WINDOW_SECONDS:-60}
+      # ── Caché Semántica ────────────────────────────────────────────────────
+      - SEMANTIC_CACHE_THRESHOLD=${SEMANTIC_CACHE_THRESHOLD:-0.92}
+      - SEMANTIC_CACHE_TTL=${SEMANTIC_CACHE_TTL:-3600}
+      # ── Entorno ────────────────────────────────────────────────────────────
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      # Bind-mount del código en desarrollo (hot-reload)
+      - ./app:/app/app
+    depends_on:
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+      chromadb:
+        condition: service_healthy
+    networks:
+      - chatbot_net
+    restart: unless-stopped
+    # Hot-reload para desarrollo (consistente con el CMD del Dockerfile)
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+
+  # ── Redis 7 ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: chatbot_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    # AOF persistence para no perder la caché semántica entre reinicios
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chatbot_net
+    restart: unless-stopped
+
+  # ── Ollama (LLM local) ─────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: chatbot_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      # Los modelos se persisten fuera del contenedor (~2GB para Qwen 2.5 3B)
+      - ollama_models:/root/.ollama
+    networks:
+      - chatbot_net
+    restart: unless-stopped
+    # El modelo se descarga en el primer arranque.
+    # Para precargarlo: docker compose run ollama ollama pull qwen2.5:3b
+
+  # ── ChromaDB (vector store RAG) ────────────────────────────────────────────
+  chromadb:
+    image: chromadb/chroma:0.5.3
+    container_name: chatbot_chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chatbot_net
+    restart: unless-stopped
+
+# ── Redes ──────────────────────────────────────────────────────────────────────
+networks:
+  chatbot_net:
+    driver: bridge
+    name: chatbot_network
+
+# ── Volúmenes persistentes ─────────────────────────────────────────────────────
+volumes:
+  redis_data:
+    name: chatbot_redis_data
+  ollama_models:
+    name: chatbot_ollama_models
+  chroma_data:
+    name: chatbot_chroma_data
