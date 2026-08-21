@@ -16,7 +16,7 @@ def test_intent_router_sync():
         "sincronizar el plan del curso",
         "por favor leer pdf de planificación",
         "actualizar programa",
-        "qué dice la planificación de la materia?"
+        "descargar planificación de la materia"
     ]
     for q in queries:
         assert IntentRouter.classify(q) == Intent.SYNC

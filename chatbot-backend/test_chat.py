@@ -7,9 +7,14 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import sys
 import time
 import httpx
+
+# Fix Windows console encoding for emojis
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 def generate_jwt(secret: str, user_id: int = 1, role: str = "student", name: str = "Usuario Prueba") -> str:
     header = base64.urlsafe_b64encode(json.dumps({"typ": "JWT", "alg": "HS256"}).encode()).rstrip(b"=").decode()
@@ -44,7 +49,7 @@ def stream_chat(url: str, token: str, question: str, año: str = "2026", carrera
     print("🤖 Respuesta: ", end="", flush=True)
 
     try:
-        with httpx.Client(timeout=60.0) as client:
+        with httpx.Client(timeout=300.0) as client:
             with client.stream("POST", endpoint, headers=headers, json=payload) as response:
                 if response.status_code != 200:
                     print(f"\n❌ Error HTTP {response.status_code}: {response.read().decode('utf-8')}")

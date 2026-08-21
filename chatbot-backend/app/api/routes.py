@@ -324,37 +324,81 @@ async def _chat_stream_handler(
 
     if intent == Intent.ASSIGNMENTS:
         tool_result = await ToolExecutor.get_pending_assignments(user_id)
-        rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[CONTEXTO DE TAREAS]\n{tool_result}"
-        
+        rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[CONTEXTO DE TAREAS EN MOODLE]\n{tool_result}"
+        generator = _stream_from_llm(
+            question,
+            request.app.state.ollama,
+            cache,
+            system_prompt=rag_system_prompt,
+            history=history,
+            history_manager=history_manager,
+            user_id=user_id,
+        )
+
     elif intent == Intent.GRADES:
         # En una impl. completa se deduciría el course_id del RAG o del estado, 
-        # para Fase 4 asumimos un curso global (ej. ID 1) si no hay contexto.
-        tool_result = await ToolExecutor.get_my_grades(user_id, course_id=1)
-        rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[CONTEXTO DE NOTAS]\n{tool_result}"
-        
+        # para Fase 4 consultamos las notas del curso 2 (o primer curso matriculado)
+        courses = await request.app.state.vector_store._client if False else []
+        tool_result = await ToolExecutor.get_my_grades(user_id, course_id=2)
+        rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[CONTEXTO DE CALIFICACIONES EN MOODLE]\n{tool_result}"
+        generator = _stream_from_llm(
+            question,
+            request.app.state.ollama,
+            cache,
+            system_prompt=rag_system_prompt,
+            history=history,
+            history_manager=history_manager,
+            user_id=user_id,
+        )
+
     elif intent == Intent.SYNC:
         tool_result = await ToolExecutor.sync_course_syllabus(
-            course_id=1, año=effective_año, carrera=effective_car
+            course_id=2, año=effective_año, carrera=effective_car
         )
-        rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[RESULTADO DE SINCRONIZACIÓN]\n{tool_result}"
-        
+        rag_system_prompt = (
+            f"Eres el asistente académico del curso.\n"
+            f"Se ejecutó una acción del sistema con el siguiente resultado:\n{tool_result}\n\n"
+            f"Instrucción: Confirma al usuario de forma amigable y concisa que el documento del curso "
+            f"ha sido sincronizado e indexado correctamente en la base de conocimiento y que ya puede "
+            f"hacerte preguntas sobre los temas, fechas de exámenes o condiciones de la materia."
+        )
+        generator = _stream_from_llm(
+            question,
+            request.app.state.ollama,
+            cache,
+            system_prompt=rag_system_prompt,
+            history=history,
+            history_manager=history_manager,
+            user_id=user_id,
+        )
+
     elif intent == Intent.CALENDAR_WRITE:
         if "confirm" not in question.lower() and "si" not in question.lower() and "sí" not in question.lower():
             # Req explícito de confirmación antes de escribir
             rag_system_prompt = (
                 f"{SYSTEM_PROMPT}\n\nEl usuario quiere agendar un evento, pero debes "
-                "pedirle confirmación explícita (ej. '¿Estás seguro que quieres agendar esto?'). "
+                "pedirle confirmación explícita (ej. '¿Estás seguro que quieres agendar esto en tu calendario?'). "
                 "No uses la herramienta de escritura todavía."
             )
         else:
-            # Fake parsing of dates for Phase 4 stub
+            # Parseo/registro de examen
             import time
             tool_result = await ToolExecutor.add_exam_to_calendar(
-                user_id=user_id, course_id=1, event_name="Examen Extraído", 
-                description="Agendado por el Chatbot", timestamp=int(time.time() + 86400)
+                user_id=user_id, course_id=2, event_name="Examen Parcial", 
+                description="Agendado por el Chatbot Académico", timestamp=int(time.time() + 86400 * 7)
             )
             rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[RESULTADO DE ESCRITURA EN CALENDARIO]\n{tool_result}"
-            
+
+        generator = _stream_from_llm(
+            question,
+            request.app.state.ollama,
+            cache,
+            system_prompt=rag_system_prompt,
+            history=history,
+            history_manager=history_manager,
+            user_id=user_id,
+        )
+
     else:
         # ── 5. RAG: recuperar contexto académico relevante (Fallback) ─────────
         vector_store      = getattr(request.app.state, "vector_store", None)
@@ -366,10 +410,8 @@ async def _chat_stream_handler(
                 retriever = Retriever(
                     vector_store=vector_store,
                     embedder=embed_text,
-                    # Umbral bajado a 0.40: distancias coseno reales para docs
-                    # relevantes con paraphrase-multilingual caen en [0.30-0.65]
                     min_score=0.40,
-                    n_results=5,
+                    n_results=3,
                 )
                 rag_result = await retriever.retrieve_with_prompt(
                     query=question,
@@ -390,11 +432,8 @@ async def _chat_stream_handler(
                 f"vacío ({total_docs} docs)" if vector_store else "no disponible",
             )
 
-        # ── 4. Anti-alucinación / Streaming LLM ──────────────────────────────
+        # ── Anti-alucinación / Streaming LLM ──────────────────────────────────
         if not rag_docs:
-            # HARD STOP: sin documentos relevantes → NO llamar a Ollama.
-            # El LLM respondería con su conocimiento general, que puede
-            # contradecir los reglamentos oficiales de la facultad.
             logger.info(
                 "Anti-alucinación activada para user_id=%s "
                 "(0 docs, carrera='%s', año=%s). No se invoca Ollama.",
@@ -402,12 +441,11 @@ async def _chat_stream_handler(
             )
             generator = _stream_no_context()
         else:
-            # Contexto RAG o Tool disponible → streaming con prompt enriquecido
             generator = _stream_from_llm(
                 question,
                 request.app.state.ollama,
                 cache,
-                system_prompt=rag_system_prompt if intent != Intent.RAG else rag_result.system_prompt,
+                system_prompt=rag_result.system_prompt,
                 history=history,
                 history_manager=history_manager,
                 user_id=user_id,

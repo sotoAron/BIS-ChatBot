@@ -83,6 +83,11 @@ class MoodleClient:
             {"userid": user_id, "courseid": course_id}
         )
 
+    @property
+    def _headers(self) -> dict[str, str]:
+        # Para evitar que Moodle haga redirect 303 a su wwwroot local (localhost:8080)
+        return {"Host": "localhost:8080"}
+
     # ── WRITE: Calendario ─────────────────────────────────────────────────────
 
     async def create_calendar_event(
@@ -115,9 +120,10 @@ class MoodleClient:
         }
 
         # _call no soporta token override, hacemos petición directa
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
+        async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=True) as client:
             resp = await client.post(
                 self._endpoint,
+                headers=self._headers,
                 data={
                     "wstoken": self._token_write,
                     "wsfunction": "core_calendar_create_calendar_events",
@@ -134,9 +140,10 @@ class MoodleClient:
         """
         Realiza una llamada POST (REST API convention in Moodle) para lecturas.
         """
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
+        async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=True) as client:
             resp = await client.post(
                 self._endpoint,
+                headers=self._headers,
                 data={
                     "wstoken": self._token,
                     "wsfunction": function,
@@ -157,13 +164,18 @@ class MoodleClient:
         Descarga un archivo (PDF) de Moodle usando el token para autenticación.
         Moodle requiere que el token se pase por query: ?token=XYZ
         """
-        if "?" in file_url:
-            url = f"{file_url}&token={self._token}"
+        # Reemplazar localhost:8080 con base_url si viene URL absoluta de Moodle
+        url = file_url
+        if url.startswith("http://localhost:8080"):
+            url = url.replace("http://localhost:8080", self._base_url, 1)
+
+        if "?" in url:
+            url = f"{url}&token={self._token}"
         else:
-            url = f"{file_url}?token={self._token}"
+            url = f"{url}?token={self._token}"
 
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-            resp = await client.get(url)
+            resp = await client.get(url, headers=self._headers)
             resp.raise_for_status()
             return resp.content
 

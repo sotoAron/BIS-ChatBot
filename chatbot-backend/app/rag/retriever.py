@@ -20,6 +20,7 @@ FILTRADO ESTRICTO (spec § 2 & § 3):
 import asyncio
 import inspect
 import logging
+import re
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -35,6 +36,60 @@ NO_CONTEXT_MESSAGE = (
 # Límite máximo de caracteres de contexto para no saturar la ventana del LLM
 # Qwen 2.5 3B: ~4096 tokens ≈ 16000 caracteres
 MAX_CONTEXT_CHARS = 6000
+
+# ── Diccionario de sinónimos para expansión de consulta ───────────────────────
+# Inyectados ANTES de vectorizar la query para aumentar el recall semántico.
+# Formato: "término_en_query" → lista de términos a concatenar a la query.
+SYNONYM_MAP: dict[str, list[str]] = {
+    "parcial":       ["examen", "evaluación", "prueba"],
+    "parciales":     ["exámenes", "evaluaciones", "pruebas"],
+    "examen":        ["parcial", "evaluación"],
+    "nota":          ["calificación", "resultado"],
+    "notas":         ["calificaciones", "resultados"],
+    "fecha":         ["cronograma", "calendario", "cuando"],
+    "cronograma":    ["fecha", "calendario", "planificación", "schedule"],
+    "vencimiento":   ["fecha límite", "entrega", "due date"],
+    "trabajo":       ["tp", "trabajo práctico", "entrega"],
+    "aprobar":       ["acreditar", "promocionar", "regularizar"],
+    "condición":     ["requisito", "reglamento", "criterio"],
+}
+
+
+def expand_query(query: str) -> str:
+    """
+    Expande la consulta del usuario inyectando sinónimos antes de vectorizar.
+
+    Si la query contiene una palabra clave del SYNONYM_MAP, concatena sus
+    equivalentes semánticos al texto. Esto mejora el recall en ChromaDB
+    sin necesidad de re-entrenar el modelo de embeddings.
+
+    Ejemplo:
+        "¿Cuándo es el parcial?" → "¿Cuándo es el parcial? examen evaluación prueba"
+
+    Args:
+        query: Pregunta original del usuario.
+
+    Returns:
+        Query enriquecida con sinónimos relevantes.
+    """
+    query_lower = query.lower()
+    additions: list[str] = []
+
+    for keyword, synonyms in SYNONYM_MAP.items():
+        # Buscar la keyword como palabra completa (no como subpalabra)
+        pattern = rf"\b{re.escape(keyword)}\b"
+        if re.search(pattern, query_lower):
+            additions.extend(synonyms)
+
+    if additions:
+        # Deduplicar y agregar al final de la query
+        unique_additions = list(dict.fromkeys(additions))
+        expanded = query.rstrip() + " " + " ".join(unique_additions)
+        logger.debug("Query expandida: '%s' → '%s'", query[:60], expanded[:80])
+        return expanded
+
+    return query
+
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -59,7 +114,10 @@ def build_rag_prompt(docs: list[dict[str, Any]], base_system_prompt: str = "") -
     base = base_system_prompt or (
         "Eres un asistente académico de la Facultad. Responde siempre en español, "
         "de forma clara y concisa. Basa tus respuestas ÚNICAMENTE en el contexto "
-        "académico proporcionado a continuación."
+        "académico proporcionado a continuación.\n"
+        "VOCABULARIO: Trata 'parcial', 'examen' y 'evaluación' como sinónimos absolutos. "
+        "Cuando el contexto mencione 'examen' y el usuario pregunte por 'parcial' (o viceversa), "
+        "interprétalos como el mismo concepto."
     )
 
     if not docs:
@@ -170,8 +228,11 @@ class Retriever:
             Lista de documentos filtrados por similitud ≥ min_score.
             Lista vacía si no hay resultados relevantes.
         """
-        # 1. Embedding de la query
-        embedding = await self._embed(query)
+        # 0. Expansión de consulta con sinónimos (mejora recall sin re-entrenar)
+        expanded_query = expand_query(query)
+
+        # 1. Embedding de la query (expandida)
+        embedding = await self._embed(expanded_query)
         embedding_list = embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
 
         # 2. Filtro obligatorio de metadatos

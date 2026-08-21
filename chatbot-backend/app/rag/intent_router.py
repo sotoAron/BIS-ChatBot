@@ -30,15 +30,15 @@ class IntentRouter:
     RULES = [
         (
             Intent.CALENDAR_WRITE,
-            r"\b(agendar|agenda|añadir al calendario|agregar al calendario|recordatorio)\b"
+            r"\b(agendar|agenda|añadir al calendario|agregar al calendario|anotar|anota|anotá|al calendario|en mi calendario|recordatorio)\b"
         ),
         (
             Intent.SYNC,
-            r"\b(sincronizar|leer pdf|planificación|programa del curso|actualizar programa)\b"
+            r"\b(sincronizar|sincroniza|sincronización|leer pdf|cargar pdf|descargar planificación|actualizar programa)\b"
         ),
         (
             Intent.GRADES,
-            r"\b(mis notas|calificaciones|nota|calificación|parcial|finales)\b"
+            r"\b(mis notas|calificaciones|nota|calificación|qué me saqué|aprobé)\b"
         ),
         (
             Intent.ASSIGNMENTS,
