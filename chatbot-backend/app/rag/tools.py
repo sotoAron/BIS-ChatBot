@@ -20,6 +20,29 @@ class ToolExecutor:
     """
 
     @classmethod
+    async def get_my_courses(cls, user_id: int) -> str:
+        """Consulta los cursos en los que el usuario está inscripto."""
+        client = get_moodle_client()
+        try:
+            courses = await client.get_user_courses(user_id)
+            if not courses:
+                return "No estás inscripto en ningún curso en este momento."
+            
+            result = []
+            for c in courses:
+                c_name = c.get("fullname")
+                c_short = c.get("shortname")
+                if c_name:
+                    result.append(f"- {c_name} ({c_short})")
+            
+            if not result:
+                return "No se encontraron cursos con nombre válido."
+            return "Estás inscripto en los siguientes cursos:\n" + "\n".join(result)
+        except Exception as e:
+            logger.error("Tool Error (get_my_courses): %s", e)
+            return "Ocurrió un error al consultar tus cursos en Moodle."
+
+    @classmethod
     async def get_pending_assignments(cls, user_id: int) -> str:
         """Consulta tareas pendientes del usuario."""
         client = get_moodle_client()

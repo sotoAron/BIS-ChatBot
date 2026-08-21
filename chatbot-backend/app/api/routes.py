@@ -19,6 +19,7 @@ FLUJO DE /api/chat/stream:
 """
 import json
 import logging
+import time
 from typing import AsyncGenerator, Optional
 
 import redis.asyncio as aioredis
@@ -103,9 +104,12 @@ def _sse_chunk(data: dict) -> str:
     return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
-def _sse_done() -> str:
-    """Evento SSE de finalización."""
-    return f"data: {json.dumps({'done': True})}\n\n"
+def _sse_done(timings: dict | None = None) -> str:
+    """Evento SSE de finalización con métricas de tiempo opcionales."""
+    payload = {"done": True}
+    if timings:
+        payload["timings"] = timings
+    return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
 def _sse_error(message: str, code: int = 500) -> str:
@@ -145,20 +149,64 @@ async def _stream_no_context() -> AsyncGenerator[str, None]:
 async def _stream_from_llm(
     question: str,
     ollama: OllamaClient,
-    cache: SemanticCache,
+    cache: SemanticCache | None,
     system_prompt: str,
     history: list[dict] | None = None,
     history_manager: ConversationHistory | None = None,
     user_id: int | None = None,
+    pipeline_timings: dict | None = None,
 ) -> AsyncGenerator[str, None]:
-    """Streaming desde Ollama con system_prompt RAG y almacenamiento en caché al finalizar."""
+    """Streaming desde Ollama con métricas de profiling y almacenamiento en caché."""
     full_response = []
+    t_llm_start = time.perf_counter()
+    t_first_token: float | None = None
+    token_count = 0
+
     try:
         async for token in ollama.stream(prompt=question, system_prompt=system_prompt, history=history):
+            if t_first_token is None:
+                t_first_token = time.perf_counter()
+            token_count += 1
             full_response.append(token)
             yield _sse_chunk({"chunk": token, "cached": False})
 
-        yield _sse_done()
+        t_llm_end = time.perf_counter()
+        llm_total_s = t_llm_end - t_llm_start
+        ttft_s = (t_first_token - t_llm_start) if t_first_token else llm_total_s
+        gen_s = (t_llm_end - t_first_token) if t_first_token else 0.0
+        tok_speed = (token_count / gen_s) if gen_s > 0 else 0.0
+
+        # Consolidar métricas de profiling del pipeline completo
+        timings_summary = dict(pipeline_timings or {})
+        t_global_start = timings_summary.pop("_t0", t_llm_start)
+        total_pipeline_s = t_llm_end - t_global_start
+
+        timings_summary["llm_ttft_s"] = round(ttft_s, 2)
+        timings_summary["llm_gen_s"] = round(gen_s, 2)
+        timings_summary["llm_tokens"] = token_count
+        timings_summary["llm_speed_tok_s"] = round(tok_speed, 1)
+        timings_summary["pipeline_total_s"] = round(total_pipeline_s, 2)
+
+        # Log visual detallado del proceso y timers
+        logger.info(
+            "\n" + "╔" + "═" * 78 + "\n"
+            f"║ ⏱️ [PROCESO DE PENSAMIENTO & TIMERS]\n"
+            f"║ 👤 User ID: {user_id} | Pregunta: \"{question[:50]}...\"\n"
+            "║ ────────────────────────────────────────────────────────────────────────────\n"
+            f"║ 🔹 [1] Rate Limit & Auth     : {timings_summary.get('rate_limit_ms', 0):>6.1f} ms\n"
+            f"║ 🔹 [2] Clasificación Intent  : {timings_summary.get('intent_ms', 0):>6.1f} ms  ➔ [{timings_summary.get('intent', 'RAG')}]\n"
+            f"║       📍 Destino Enrutador   : {timings_summary.get('intent_destination', 'N/A')}\n"
+            f"║ 🔹 [3] Búsqueda en Caché     : {timings_summary.get('cache_ms', 0):>6.1f} ms  ({timings_summary.get('cache_result', 'MISS')})\n"
+            f"║ 🔹 [4] Carga de Historial    : {timings_summary.get('history_ms', 0):>6.1f} ms\n"
+            f"║ 🔹 [5] Búsqueda RAG ChromaDB : {timings_summary.get('rag_ms', 0):>6.1f} ms  ({timings_summary.get('rag_docs_count', 0)} chunks recuperados)\n"
+            f"║ 🔹 [6] LLM Prompt Eval (TTFT): {ttft_s:>6.2f} s   (Evaluación de contexto en CPU Ollama)\n"
+            f"║ 🔹 [7] LLM Generación Texto  : {gen_s:>6.2f} s   ({token_count} tokens @ {tok_speed:.1f} tok/s)\n"
+            "║ ────────────────────────────────────────────────────────────────────────────\n"
+            f"║ 🏁 TIEMPO TOTAL DE RESPUESTA : {total_pipeline_s:>6.2f} s\n"
+            "╚" + "═" * 78
+        )
+
+        yield _sse_done(timings=timings_summary)
 
         complete = "".join(full_response)
         
@@ -169,8 +217,8 @@ async def _stream_from_llm(
             except Exception as e:
                 logger.warning("Error guardando historial: %s", e)
 
-        # Guardar en caché semántica al finalizar el stream
-        if full_response:
+        # Guardar en caché semántica al finalizar el stream si aplica
+        if full_response and cache:
             try:
                 await cache.set(question, complete)
             except Exception as cache_err:
@@ -251,6 +299,9 @@ async def _chat_stream_handler(
       4. Construir system_prompt con contexto RAG recuperado
       5. Streaming Ollama Qwen 2.5 3B con system_prompt RAG
     """
+    t0 = time.perf_counter()
+    pipeline_timings: dict = {"_t0": t0}
+
     user_id  = user_payload.get("sub", 0)
     settings = get_settings()
 
@@ -266,12 +317,14 @@ async def _chat_stream_handler(
         or settings.default_carrera
     )
     # ── 1. Rate Limiting ──────────────────────────────────────────────────────
+    t_rl_start = time.perf_counter()
     rate_limiter = RateLimiter(
         redis_client=request.app.state.redis,
         max_requests=settings.rate_limit_requests,
         window_seconds=settings.rate_limit_window_seconds,
     )
     rl_result = await rate_limiter.check(user_id)
+    pipeline_timings["rate_limit_ms"] = round((time.perf_counter() - t_rl_start) * 1000, 2)
 
     if not rl_result.is_allowed:
         raise HTTPException(
@@ -280,43 +333,60 @@ async def _chat_stream_handler(
             headers={"Retry-After": str(settings.rate_limit_window_seconds)},
         )
 
-    # ── 2. Caché Semántica ────────────────────────────────────────────────────
-    cache_ns = _make_namespace(
-        año_academico=effective_año,
-        carrera=effective_car,
-        role=user_payload.get("role", "student"),
-    )
-    cache = SemanticCache(
-        redis_client=request.app.state.redis,
-        embedder=embed_text,
-        threshold=settings.semantic_cache_threshold,
-        ttl=settings.semantic_cache_ttl,
-        namespace=cache_ns,
-    )
+    # ── 2. Intent Router (Mover antes de caché) ───────────────────────────────
+    t_intent_start = time.perf_counter()
+    intent = IntentRouter.classify(question)
+    destination = IntentRouter.get_destination(intent)
+    pipeline_timings["intent_ms"] = round((time.perf_counter() - t_intent_start) * 1000, 2)
+    pipeline_timings["intent"] = intent.name
+    pipeline_timings["intent_destination"] = destination
+    logger.info("🎯 [ENRUTADOR] Intención: %s ➔ Destino: %s", intent.name, destination)
 
-    cached_response = await cache.get(question)
-    if cached_response:
-        logger.info("Cache HIT para user_id=%s", user_id)
-        generator = _stream_from_cache(cached_response)
-        
-        return StreamingResponse(
-            generator,
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control":               "no-cache",
-                "X-Accel-Buffering":           "no",
-                "X-RateLimit-Remaining":       str(rl_result.remaining),
-                "Access-Control-Allow-Origin": "*",
-            },
+    # ── 3. Caché Semántica (Solo para RAG/preguntas generales) ────────────────
+    t_cache_start = time.perf_counter()
+    cache = None
+    if intent == Intent.RAG:
+        cache_ns = _make_namespace(
+            año_academico=effective_año,
+            carrera=effective_car,
+            role=user_payload.get("role", "student"),
+        )
+        cache = SemanticCache(
+            redis_client=request.app.state.redis,
+            embedder=embed_text,
+            threshold=settings.semantic_cache_threshold,
+            ttl=settings.semantic_cache_ttl,
+            namespace=cache_ns,
         )
 
-    # ── 3. Historial Conversacional ───────────────────────────────────────────
+        cached_response = await cache.get(question)
+        pipeline_timings["cache_ms"] = round((time.perf_counter() - t_cache_start) * 1000, 2)
+        if cached_response:
+            pipeline_timings["cache_result"] = "HIT"
+            logger.info("Cache HIT para user_id=%s (%.2f ms)", user_id, pipeline_timings["cache_ms"])
+            generator = _stream_from_cache(cached_response)
+            
+            return StreamingResponse(
+                generator,
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control":               "no-cache",
+                    "X-Accel-Buffering":           "no",
+                    "X-RateLimit-Remaining":       str(rl_result.remaining),
+                    "Access-Control-Allow-Origin": "*",
+                },
+            )
+        else:
+            pipeline_timings["cache_result"] = "MISS"
+    else:
+        pipeline_timings["cache_ms"] = round((time.perf_counter() - t_cache_start) * 1000, 2)
+        pipeline_timings["cache_result"] = "BYPASS"
+
+    # ── 4. Historial Conversacional ───────────────────────────────────────────
+    t_hist_start = time.perf_counter()
     history_manager = ConversationHistory(request.app.state.redis)
     history = await history_manager.get_history(user_id)
-
-    # ── 4. Intent Router & Tools (Fase 4) ─────────────────────────────────────
-    intent = IntentRouter.classify(question)
-    logger.info("Intent detectado: %s", intent.name)
+    pipeline_timings["history_ms"] = round((time.perf_counter() - t_hist_start) * 1000, 2)
     
     rag_docs: list = []
     vector_store = getattr(request.app.state, "vector_store", None)
@@ -333,11 +403,24 @@ async def _chat_stream_handler(
             history=history,
             history_manager=history_manager,
             user_id=user_id,
+            pipeline_timings=pipeline_timings,
+        )
+
+    elif intent == Intent.COURSES:
+        tool_result = await ToolExecutor.get_my_courses(user_id)
+        rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[CONTEXTO DE CURSOS INSCRIPTOS]\n{tool_result}"
+        generator = _stream_from_llm(
+            question,
+            request.app.state.ollama,
+            cache,
+            system_prompt=rag_system_prompt,
+            history=history,
+            history_manager=history_manager,
+            user_id=user_id,
+            pipeline_timings=pipeline_timings,
         )
 
     elif intent == Intent.GRADES:
-        # En una impl. completa se deduciría el course_id del RAG o del estado, 
-        # para Fase 4 consultamos las notas del curso 2 (o primer curso matriculado)
         courses = await request.app.state.vector_store._client if False else []
         tool_result = await ToolExecutor.get_my_grades(user_id, course_id=2)
         rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[CONTEXTO DE CALIFICACIONES EN MOODLE]\n{tool_result}"
@@ -349,6 +432,7 @@ async def _chat_stream_handler(
             history=history,
             history_manager=history_manager,
             user_id=user_id,
+            pipeline_timings=pipeline_timings,
         )
 
     elif intent == Intent.SYNC:
@@ -370,19 +454,17 @@ async def _chat_stream_handler(
             history=history,
             history_manager=history_manager,
             user_id=user_id,
+            pipeline_timings=pipeline_timings,
         )
 
     elif intent == Intent.CALENDAR_WRITE:
         if "confirm" not in question.lower() and "si" not in question.lower() and "sí" not in question.lower():
-            # Req explícito de confirmación antes de escribir
             rag_system_prompt = (
                 f"{SYSTEM_PROMPT}\n\nEl usuario quiere agendar un evento, pero debes "
                 "pedirle confirmación explícita (ej. '¿Estás seguro que quieres agendar esto en tu calendario?'). "
                 "No uses la herramienta de escritura todavía."
             )
         else:
-            # Parseo/registro de examen
-            import time
             tool_result = await ToolExecutor.add_exam_to_calendar(
                 user_id=user_id, course_id=2, event_name="Examen Parcial", 
                 description="Agendado por el Chatbot Académico", timestamp=int(time.time() + 86400 * 7)
@@ -397,10 +479,12 @@ async def _chat_stream_handler(
             history=history,
             history_manager=history_manager,
             user_id=user_id,
+            pipeline_timings=pipeline_timings,
         )
 
     else:
         # ── 5. RAG: recuperar contexto académico relevante (Fallback) ─────────
+        t_rag_start = time.perf_counter()
         vector_store      = getattr(request.app.state, "vector_store", None)
         total_docs        = vector_store.count() if vector_store else 0
         rag_docs: list    = []
@@ -410,23 +494,38 @@ async def _chat_stream_handler(
                 retriever = Retriever(
                     vector_store=vector_store,
                     embedder=embed_text,
-                    min_score=0.40,
-                    n_results=3,
+                    min_score=0.20,
+                    n_results=5,
                 )
+                
+                # Contextualizar la búsqueda RAG con la última pregunta del usuario (Short-term memory)
+                search_query = question
+                if history:
+                    last_user_msg = next((msg["content"] for msg in reversed(history) if msg["role"] == "user"), "")
+                    if last_user_msg:
+                        search_query = f"{last_user_msg}. {question}"
+
                 rag_result = await retriever.retrieve_with_prompt(
-                    query=question,
+                    query=search_query,
                     año_academico=effective_año,
                     carrera=effective_car,
                 )
                 rag_docs = rag_result.docs
+                pipeline_timings["rag_ms"] = round((time.perf_counter() - t_rag_start) * 1000, 2)
+                pipeline_timings["rag_docs_count"] = len(rag_docs)
                 logger.info(
-                    "RAG: %d docs recuperados para user_id=%s "
-                    "(año=%s, carrera='%s', ns=%s)",
-                    len(rag_docs), user_id, effective_año, effective_car, cache_ns,
+                    "RAG: %d docs recuperados en %.2f ms para user_id=%s "
+                    "(año=%s, carrera='%s')",
+                    len(rag_docs), pipeline_timings["rag_ms"], user_id, effective_año, effective_car,
                 )
+                logger.info("RAG CHUNKS RECUPERADOS: %s", [doc.get("metadata", {}).get("chunk_index") for doc in rag_docs])
             except Exception as rag_err:
+                pipeline_timings["rag_ms"] = round((time.perf_counter() - t_rag_start) * 1000, 2)
+                pipeline_timings["rag_docs_count"] = 0
                 logger.warning("Error en RAG: %s", rag_err)
         else:
+            pipeline_timings["rag_ms"] = 0.0
+            pipeline_timings["rag_docs_count"] = 0
             logger.info(
                 "RAG omitido: ChromaDB %s.",
                 f"vacío ({total_docs} docs)" if vector_store else "no disponible",
@@ -449,6 +548,7 @@ async def _chat_stream_handler(
                 history=history,
                 history_manager=history_manager,
                 user_id=user_id,
+                pipeline_timings=pipeline_timings,
             )
 
 

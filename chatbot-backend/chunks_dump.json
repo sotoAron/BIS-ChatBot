@@ -1,0 +1,482 @@
+[
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0000",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 0,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n**1.​ Datos Descriptivos**\n\n**Institución**\n\n**Carrera**\n\n**Departamento**\n\n**Área/Bloque**\n\n**Asignatura**\n\n**Nivel**\n\n**Ciclo Lectivo**\n\n**Carga Horaria Total**\n\n**Carga Horaria**\n**Semanal**\n\n**Cursado** **Anual**\n\n**2.​ Estructura de la cátedra:**\n\n|Institución|UNIVERSIDAD TECNOLÓGICA NACIONAL- FACULTAD REGIONAL RESISTENCIA|Col3|Col4|\n|---|---|---|---|\n|Carrera|INGENIERÍA EN SISTEMAS DE INFORMACIÓN|||\n|Departamento|INGENIERÍA EN SISTEMAS DE INFORMACIÓN|||\n|Área/Bloque|ELECTIVAS/ TECNOLOGÍAS APLICADAS|||\n|Asignatura|ASPECTOS AVANZADOS DE CALIDAD DE SOFTWARE|||\n|Nivel|4|||\n|Ciclo Lectivo|2026|||\n|Carga Horaria Total|96 hs C. / 72 hs R.|||\n|Carga Horaria Semanal|6 hs. C. / 4.5 hs R.|||\n|Cursado|Anual☐|1º Cuatrimestre☐|2º Cuatrimestre☒|\n\n|Nombre y Apellido del Profesor|Categoría|Situación de Revista y/o Condición|Dedicación|Tareas/funciones a desarrollar|\n|---|---|---|---|---|\n|Noelia Pinto|Titular|Interina|Exclusiva|Responsable de cátedra. ●​ Determinación de los criterios de ●​ regularización, promoción de la parte práctica y de la promoción directa ●​ Confección de la planificación de la asignatura ●​ Dictado de clases ●​ Seguimiento y control de las actividades de los alumnos en el Aula Virtual ●​ Evaluaciones parciales y finales|\n|César J. Acuña|Profesor Libre|||Colaboración en el dictado de temas específcos en la asignatura.|\n\n1\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.0025058332830667496,
+      -0.012226543389260769,
+      0.025561124086380005,
+      0.028591398149728775,
+      0.059449031949043274
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0001",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 1,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n# PLANIFICACIÓN ANUAL\n**3.​ Fundamentación[1]:**\n\nLa calidad de los sistemas de información constituye actualmente un factor estratégico para las\norganizaciones, dado que la confiabilidad, seguridad, disponibilidad, mantenibilidad y usabilidad\nde las soluciones tecnológicas impactan directamente en la continuidad de los procesos de\nnegocio, la toma de decisiones y la generación de valor. En un contexto caracterizado por el\ndesarrollo ágil, la integración y entrega continua (CI/CD), la computación en la nube, la inteligencia\nartificial y la creciente complejidad de los ecosistemas digitales, la calidad del software deja de\nconcebirse como una actividad limitada a la etapa de pruebas para transformarse en una\nresponsabilidad transversal a todo el ciclo de vida del desarrollo.\n\nEn este escenario, la Ingeniería de Calidad de Software (Quality Engineering) integra principios,\nmétodos, técnicas, estándares, métricas y herramientas que permiten prevenir defectos, evaluar\natributos de calidad, automatizar procesos de verificación y validación, monitorear la calidad de los\nproductos y promover la mejora continua de los procesos de desarrollo. Asimismo, incorpora\nenfoques modernos como DevSecOps, automatización de pruebas, observabilidad, accesibilidad,\nexperiencia de usuario y el uso responsable de herramientas basadas en inteligencia artificial para\nfortalecer la confiabilidad y la eficiencia de los productos de software.\n\nLa asignatura Aspectos Avanzados de Calidad de Software complementa la formación brindada por\nlas asignaturas obligatorias del área de Ingeniería de Software, profundizando contenidos\nespecializados que resultan indispensables para afrontar los desafíos actuales de la profesión. En\nparticular, promueve el desarrollo de competencias para planificar estrategias de aseguramiento\nde la calidad, diseñar y ejecutar pruebas funcionales y no funcionales, automatizar procesos de\nvalidación, aplicar modelos y estándares internacionales de calidad, analizar métricas e\nindicadores, evaluar la calidad desde la perspectiva del usuario y fundamentar decisiones técnicas\norientadas a la mejora continua.\n\nEn concordancia con el perfil del egresado definido por el Libro Rojo de CONFEDI para la carrera de\nIngeniería en Sistemas de Información, la asignatura contribuye especialmente al desarrollo de\ncapacidades vinculadas con las actividades reservadas de especificar, proyectar y desarrollar\nsistemas de información, establecer métricas y normas de calidad de software para medir, evaluar,\ncontrolar y monitorear productos y procesos, y certificar el funcionamiento, condición de uso o\nestado de sistemas de información y software, promoviendo una formación basada en estándares\nprofesionales, pensamiento crítico, innovación tecnológica y compromiso con la calidad como eje\ntransversal de la ingeniería.\n\n4.​ Resultados de Aprendizajes previos requeridos para iniciar/ continuar el desarrollo de\n",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.0032903195824474096,
+      -0.011160248890519142,
+      -0.0429936982691288,
+      -0.07050292938947678,
+      -0.0024409915786236525
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0002",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 2,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n\n4.​ Resultados de Aprendizajes previos requeridos para iniciar/ continuar el desarrollo de\n\n**los Resultados de Aprendizaje de la asignatura en relación al nivel de aporte a las**\n**sub-competencias y Competencias.**\n\n1Explicar la _importancia de la asignatura en el Plan de Estudios de la Carrera en relación a la contribución_\n_respecto al desarrollo de las competencias_ y el Perfil del Egresado. Máximo 200 palabras (Según\nLineamientos para la Planificación Anual enviada por Rectorado UTN).\n\n2\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      0.025615539401769638,
+      0.021884387359023094,
+      -0.005960495676845312,
+      0.026665357872843742,
+      0.004680664744228125
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0003",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 3,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\nSe exponen a continuación Resultados de Aprendizajes previos requeridos para iniciar/ continuar\nel desarrollo de los Resultados de Aprendizaje de la asignatura en relación al nivel de aporte a las\nsub-competencias y Competencias:\n\n**Asignaturas Aprobadas** **Resultados de Aprendizaje Alcanzados (Previos)**\n**y/o Regularizadas**\n\n**Diseño de Sistemas de**\n\n✔​ Aprende los conceptos de Metodología, Técnicas, Herramientas,\n\n**Información**\n(Aprobación de Ciclo de vida, y Proceso de desarrollo, la importancia de\nCursada)\n\nformalización y utilización de los mismos en la ingeniería de\nsistemas y de software, diferenciando los distintos enfoques y\nparadigmas principales.\n\n✔​ Aprende a Diseñar Interfaces de Usuario para Sistemas de\n\nInformación, aplicando los principios fundamentales de Experiencia\nde Usuario.\n\n**Ingeniería y Calidad del**\n\n✔​ Comprende modelos de calidad de proceso y producto.\n\n**Software (Aprobación**\nde Cursada)\n\n✔​ Identifica estándares, métricas y buenas prácticas para asegurar la\n\ncalidad del software durante su desarrollo.\n\n**Asignaturas posteriores** **Resultados de Aprendizaje posteriores a los que aporta la materia**\n\n**Proyecto Final**\n✔​ RA 1: Implementa correctamente el proceso de prueba de\n\nsoftware, seleccionando las actividades, utilizando los métodos,\ntécnicas y herramientas para asegurar la calidad del mismo.\n\n✔​ RA 6: Trabaja en equipo, de manera organizada y coherente,\n\nrecuperando los conocimientos adquiridos, para promover\ndestrezas que le permitan resolver problemas o para la resolución\nde problemas.\n\n3\n\n|Asignaturas Aprobadas y/o Regularizadas|Resultados de Aprendizaje Alcanzados (Previos)|\n|---|---|\n|Diseño de Sistemas de Información (Aprobación de Cursada)|✔​ Aprende los conceptos de Metodología, Técnicas, Herramientas, Ciclo de vida, y Proceso de desarrollo, la importancia de formalización y utilización de los mismos en la ingeniería de sistemas y de software, diferenciando los distintos enfoques y paradigmas principales. ✔​ Aprende a Diseñar Interfaces de Usuario para Sistemas de Información, aplicando los principios fundamentales de Experiencia de Usuario.|\n|Ingeniería y Calidad del Software (Aprobación de Cursada)|✔​ Comprende modelos de calidad de proceso y producto. ✔​ Identifica estándares, métricas y buenas prácticas para asegurar la calidad del software durante su desarrollo.|\n|Asignaturas posteriores|Resultados de Aprendizaje posteriores a los que aporta la materia|\n|Proyecto Final|✔​ RA 1: Implementa correctamente el proceso de prueba de software, seleccionando las actividades, utilizando los métodos, técnicas y herramientas para asegurar la calidad del mismo. ✔​ RA 6: Trabaja en equipo, de manera organizada y coherente, recuperando los conocimientos adquiridos, para promover destrezas que le permitan resolver problemas o para la resolución de problemas.|\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.008047391660511494,
+      0.00711050583049655,
+      -0.012433876283466816,
+      0.005226235371083021,
+      -0.01670481637120247
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0004",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 4,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n# PLANIFICACIÓN ANUAL\n**5.​ Competencias y Capacidades vinculadas con la Asignatura**\n\n**Nivel**\n\n**Competencias** **de** **Capacidades asociadas a la competencia**\n\n**Aporte[2]**\n\nCGT4: Utilizar de manera efectiva las técnicas y 3\n\n✔​ Aplicar correctamente las diferentes\n\nherramientas de aplicación en la ingeniería.\n\ntécnicas de diseño de casos de prueba,\nsiguiendo el enfoque práctico\n\npropuesto, de acuerdo a\n\ncaracterísticas del software,\n\nTecnológicas\n\ngarantizar la calidad del mismo.\n\n(CGT)\n\n✔​ Utilizar correctamente\n\nherramientas de pruebas de usabilidad\nadecuadas, conforme a un conjunto de\nrestricciones para evaluar calidad en el\nuso del software.\n\nCE1.1: Especificar, proyectar y desarrollar sistemas de 2\n\n✔​ Evaluar adecuadamente la calidad de\n\ninformación para concebir soluciones tecnológicas que\n\nlos sistemas de información, durante el\n\npermitan resolver situaciones en las organizaciones\n\nEspecíficas (CE) proceso de desarrollo del mismo para\n\nmediante el empleo de metodologías de sistemas y\n\ngarantizar su funcionamiento exitoso.\n\ntecnologías asociadas a los sistemas de información.\n\ncumpliendo con las normas\n\nestándares de calidad.\n\n2 Detallar la relación de la asignatura con las competencias de egreso específicas, genéricas tecnológicas, sociales, políticas y actitudinales de la carrera.\nSegún la matriz de tributación desarrollada para la carrera, indicar a cuáles competencias de egreso tributa la asignatura y en qué nivel (0=no tributa,\n1=bajo, 2=medio, 3=alto): 0: no aporta.\nNivel 1: se enseñan los aspectos fundamentales de la competencia, se comienza a practicar la competencia y en los resultados de aprendizaje, se ven\nelementos fundamentales de la competencia.\nNivel 2: en la enseñanza se refuerza la competencia, en la práctica, se practica la competencia y en el resultado de aprendizaje se comienza a evidenciar\nla competencia, pero puede necesitar refuerzo.\nNivel 3: en la enseñanza, se refuerza la competencia de ser necesario, en la práctica, se practica la competencia y en los resultados de aprendizaje, se\nevidencia un dominio de la competencia.\n\n4\n\n|5.​ Competencias y Capacidades vinculadas con la Asignatura|Col2|Col3|Col4|\n|---|---|---|---|\n|Competencias||Nivel de Aporte2|Capacidades asociadas a la competencia|\n|Tecnológicas (CGT)|CGT4: Utilizar de manera efectiva las técnicas y herramientas de aplicación en la ingeniería.|3|✔​ Aplicar correctamente las diferentes técnicas de diseño de casos de prueba, siguiendo el enfoque práctico propuesto, de acuerdo a las características del software, para garantizar la calidad del mismo. ✔​ Utilizar correctamente las herramientas de pruebas de usabilidad adecuadas, conforme a un conjunto de restricciones para evaluar calidad en el uso del software.|",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.04455545172095299,
+      0.04325520247220993,
+      -0.028843287378549576,
+      -0.04833533242344856,
+      -0.10183069109916687
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0005",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 5,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n|---|---|---|---|\n|Competencias||Nivel de Aporte2|Capacidades asociadas a la competencia|\n|Tecnológicas (CGT)|CGT4: Utilizar de manera efectiva las técnicas y herramientas de aplicación en la ingeniería.|3|✔​ Aplicar correctamente las diferentes técnicas de diseño de casos de prueba, siguiendo el enfoque práctico propuesto, de acuerdo a las características del software, para garantizar la calidad del mismo. ✔​ Utilizar correctamente las herramientas de pruebas de usabilidad adecuadas, conforme a un conjunto de restricciones para evaluar calidad en el uso del software.|\n|Específicas (CE)|CE1.1: Especificar, proyectar y desarrollar sistemas de información para concebir soluciones tecnológicas que permitan resolver situaciones en las organizaciones mediante el empleo de metodologías de sistemas y tecnologías asociadas a los sistemas de información.|2|✔​ Evaluar adecuadamente la calidad de los sistemas de información, durante el proceso de desarrollo del mismo para garantizar su funcionamiento exitoso. cumpliendo con las normas y estándares de calidad.|\n\n-----\n\n|Col1|CE4.1: Certificar el funcionamiento, condición de uso o estado de sistemas de información, sistemas de comunicación de datos, software, seguridad informática y calidad de software para asegurar la generación de los resultados deseados en función de restricciones de tiempo y recursos establecidos.|3|✔​ Asegurar el funcionamiento de los sistemas de información, mediante la implementación de pruebas automatizadas de software, que permitan la integración continua de software de calidad.|\n|---|---|---|---|\n|Sociales, Políticas y Actitudinales (CGSPA)|CGSPA7. Comunicarse con efectividad|1|✔​ Utilizar correctamente la expresión oral, defendiendo los puntos vista tanto individuales, como grupales durante los coloquios y exposiciones previstas, para sacar el máximo provecho en las actividades propuestas|\n||CGSPA6. Desempeñarse de manera efectiva en equipos de trabajo|1|✔​ Resolver problemas prácticos para promover el trabajo en equipo respetando los puntos de vista y opiniones de sus integrantes|",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.06759569048881531,
+      0.07032319158315659,
+      -0.02370385266840458,
+      -0.0563259981572628,
+      -0.08513911068439484
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0006",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 6,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n**6.​ Programa Analítico, Unidades Temáticas:**\n\n**Unidad I: Introducción a la Calidad de Software (10 hs)**\nDefinición y evolución del concepto de calidad. Calidad del producto y calidad del proceso de software. Principios de gestión de\nla calidad. Mejora continua. Ciclo PDCA. Costos de la calidad. Aseguramiento de la calidad (Quality Assurance) y Control de\nCalidad (Quality Control). Evolución hacia Quality Engineering. Calidad durante todo el ciclo de vida del software. Calidad en\nenfoques ágiles y DevOps. Conceptos de Shift Left, Shift Right y Continuous Quality. Introducción a DevSecOps. Calidad en\nsistemas basados en Inteligencia Artificial. Observabilidad y confiabilidad del software. Introducción a Site Reliability\nEngineering (SRE). Análisis de incidentes reales de fallos de software (Therac-25, Ariane 5, Knight Capital, Boeing 737 MAX,\nSolarWinds, CrowdStrike) como estudios de caso para comprender el impacto de la calidad en sistemas críticos.\n\n**Unidad II: El Proceso de Pruebas de Software (14 hs)**\nLas pruebas de software dentro del ciclo de vida de desarrollo. Objetivos, principios y fundamentos del testing. Niveles y tipos\nde pruebas: unitarias, integración, sistema, aceptación, regresión, humo, exploratorias, rendimiento, carga, estrés, resiliencia y\nseguridad. Estrategias de pruebas en enfoques ágiles. Gestión del proceso de pruebas. Planificación y diseño del Plan de\nPruebas. Artefactos y documentación. Gestión del ciclo de vida de defectos. Clasificación y priorización de incidentes.\nTrazabilidad entre requisitos, pruebas y defectos. Métricas de testing e indicadores de calidad. Risk-Based Testing. Continuous\nTesting y TestOps. Uso de herramientas colaborativas para la gestión de pruebas (Jira, Azure DevOps, GitHub Projects).\nAplicación de herramientas de Inteligencia Artificial para generación, revisión y priorización de casos de prueba.\n\n**Unidad III: Diseño de Pruebas de Software (18 hs)**\nDiseño de casos de prueba. Criterios de selección y cobertura. Técnicas estructurales (Caja Blanca): complejidad ciclomática,\ncaminos independientes, cobertura de sentencias, decisiones, condiciones y caminos. Técnicas funcionales (Caja Negra):\nparticiones de equivalencia, análisis de valores límite, tablas de decisión, transición de estados, casos de uso y conjetura de\nerrores. Técnicas basadas en riesgos y experiencia. Pairwise Testing. Mutation Testing. Property-Based Testing. Model-Based\nTesting. Introducción al Prompt Testing para aplicaciones basadas en modelos de lenguaje (LLMs). Uso de herramientas de\nInteligencia Artificial para asistir el diseño, revisión y optimización de casos de prueba.\n\n6\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.03961632028222084,
+      0.0020751841366291046,
+      -0.0019522029906511307,
+      -0.03125620633363724,
+      -0.04412754252552986
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0007",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 7,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n# PLANIFICACIÓN ANUAL\n**Unidad IV: Automatización de las Pruebas de Software (12 hs)**\nFundamentos de automatización de pruebas. Beneficios, limitaciones y criterios de selección. Estrategias para automatizar\npruebas funcionales y no funcionales. Automatización de interfaces web, APIs y aplicaciones móviles. Frameworks modernos de\nautomatización. Automatización mediante Playwright, Cypress, Selenium 4, Appium y REST Assured. Conceptos de Self-Healing\nTests y automatización asistida por Inteligencia Artificial. Automatización de pruebas visuales. Buenas prácticas para el\nmantenimiento de suites automatizadas.\n\n**Unidad V: Diseño de modelos y métricas de Calidad (24 hs)**\nModelos de calidad de producto y proceso. Evolución de ISO 9126 hacia ISO/IEC 25010 y familia SQuaRE. Características y\nsubcaracterísticas de calidad. Modelos de madurez de procesos. Evolución de CMM hacia CMMI. Áreas de proceso y niveles de\nmadurez. Métricas orientadas al producto, proceso y proyecto. Indicadores de desempeño. Deuda técnica y mantenibilidad.\nMétricas de calidad de código mediante herramientas de análisis estático (SonarQube). Introducción a métricas DORA y SPACE\npara evaluación de equipos de desarrollo. Tableros de indicadores (dashboards). Métricas para sistemas basados en Inteligencia\nArtificial. Evaluación de calidad de modelos generativos y criterios para el análisis de alucinaciones, consistencia, precisión y\nconfiabilidad de respuestas generadas por IA.\n\n**Unidad VI: La calidad desde el punto de vista del usuario final: Desarrollo de Aplicaciones centrado en el Usuario (18 hs)**\n**7.​ Calidad en uso. Diseño Centrado en el Usuario (UCD) y Human-Centered Design. Experiencia de Usuario (UX) y Experiencia**\n\ndel Cliente (CX). Diseño inclusivo y accesibilidad digital. Principios de accesibilidad según WCAG 2.2. Métodos de\ninvestigación con usuarios. Evaluación heurística. 4Propuesta para el desarrollo de los procesos de Enseñanza y\n**Aprendizaje:**\n\n**Aprendizaje**\n\n**Enseñanza[3]**\n\n|Resultados de Aprendizaje|Unidades Temáticas|Actividades Formativas|Estrategias de Enseñanza3|Tiempo Aproximado. Horas Reloj x semana|Evaluación|\n|---|---|---|---|---|---|\n\n3Aclarar para las estrategias de enseñanza, si la asignatura se dicta bajo el formato de Aula Híbrida.\n\n8\n\n-----\n\n|Col1|Col2|Tipo|Dentro del Aula|Fuera del Aula|Col6|Dentro del Aula|Fuera del Aula|Tipo4|Indicador de logro|Técnicas|\n|---|---|---|---|---|---|---|---|---|---|---|",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.06410249322652817,
+      0.026378342881798744,
+      0.004959671758115292,
+      -0.0033535240218043327,
+      -0.03165193274617195
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0008",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 8,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n\n|Col1|Col2|Tipo|Dentro del Aula|Fuera del Aula|Col6|Dentro del Aula|Fuera del Aula|Tipo4|Indicador de logro|Técnicas|\n|---|---|---|---|---|---|---|---|---|---|---|\n|RA 1: Analiza enunciados de problemas identificando Datos y Acciones que emergen del planteo|1,2,3,4|RPI|Debates en relación con situaciones problemáticas tipo|Resolución de cuestionarios teóricos de autogestión en aula virtual para retomar y avanzar en el análisis y resolución de situaciones problemáticas|●​Aprendizaje basado en problemas ●​Exposición dialogada a partir del análisis y posibles soluciones a los problemas presentados ●​Cuadros sinópticos|5 hs|15’|Formativa por medio de autoevaluación.|Identificación adecuada de Datos y Acciones Nivel de fundamentación en el análisis y presentación de posibles soluciones a los problemas trabajados|Debate a partir de criterios fundados en relación a las situaciones problemática s tipo Cuestionario auto administrado|\n|RA 2: Desarrolla soluciones algorítmicas utilizando las estructuras de Datos y de control|2,3,4|RPI|Análisis y Resolución de problemas tipos propuestos en Guía Socialización de respuestas analíticas y criteriosas de los problemas adicionales|Resolución de problemas adicionales|●​Aprendizaje basado en problemas|5 hs|15’|Sumativa por medio de la heteroevaluación.|Utilización correcta de las estructuras de datos y acciones Participación en la socialización con el grupo-clase de la resolución a los problemas adicionales|Instancia Práctica de Evaluación Seguimiento en la resolución de problemas|\n|RA 3: Utiliza fundamentos teóricos para analizar ejemplos prácticos de acuerdo a las características y nivel de complejidad de las situaciones problemáticas.|Todas|RPI|Análisis y resolución de problemas Diseño de presentaciones visuales con recursos TIC Presentación oral y visual de las posibles soluciones|Resolución de cuestionarios – lección en aula virtual|●​Aprendizaje basado en problemas ●​Explicación guiada en relación a las demandas en el proceso de análisis y resolución de las situaciones problemáticas|5 hs|15’|Formativa por medio de autoevaluación, registro de avances y|Emite criterios fundados y críticos en las relaciones establecidas entre datos y acciones a partir de los planteos. Creatividad y formato del diseño de una presentación visual|Cuestionario Situaciones problemática s|",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.017456714063882828,
+      0.004415489267557859,
+      -0.011993711814284325,
+      -0.003634852822870016,
+      0.015507154166698456
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0009",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 9,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n4 Indicar el tipo de evaluación -Diagnóstica, Formativa, Sumativa en relación a la actividad: Autoevaluación; Coevaluación; Heteroevaluación\n\n9\n\n-----\n\n|Col1|Col2|Col3|Col4|Col5|Col6|Col7|Col8|Col9|Correcta Expresión oral utilizando lenguaje técnico específico de acuerdo a los objetivos de la tarea, el contexto y los destinatarios. Resolución correcta de cuestionarios-lecció n.|Col11|\n|---|---|---|---|---|---|---|---|---|---|---|\n|RA 4: Diseña algoritmos de solución, con criterios de optimicidad de recursos para problemas tipos|5|RPI|Debates en relación con situaciones problemáticas tipo|Resolución de cuestionarios teóricos de autogestión en aula virtual|●​Se retoma el debate a partir de las situaciones problemáticas planteadas y luego se realiza una exposición dialogada considerando el nivel de complejidad de las dificultades que va evidenciando el grupo. ●​Cuadros comparativos|5 hs|15’|Formativa por medio de autoevaluación.|Relacionar con criticidad soluciones algorítmicas, en función de los planteos Correcta Resolución de los cuestionarios autoadministrados.|Cuestionario Situaciones problemáatic as|\n|RA 5: Implementa soluciones algorítmicas en un lenguaje de programación|3 y 4|FE5|Presentación oral y visual de soluciones Resolución de problemas tipos|Resolución de cuestionarios teóricos de autogestión en aula virtual|●​ Taller en equipo ●​ Preguntas disparadoras|10 hs por unidad|10 hs por unidad|Formativa: seguimiento de presentaciones orales y trabajo de taller.|Desarrollo efectivo de un trabajo integrador del lenguaje|Lista de verificación|",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      0.020932991057634354,
+      0.02447350136935711,
+      0.00989479385316372,
+      -0.01129855029284954,
+      -0.04201388359069824
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0010",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 10,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n5 Tipo de actividad formativa: Fe (formación experimental), RPI (resolución de problemas de ingeniería). APyD (activ de proyecto y diseño) y PPS (práctica\nprofesional supervisada).\n\n10\n\n-----\n\n|Col1|Col2|Col3|Col4|Col5|Col6|Col7|Col8|Sumativa por medio de la heteroevaluación|Col10|Col11|\n|---|---|---|---|---|---|---|---|---|---|---|",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.04038259759545326,
+      -0.0009910158114507794,
+      0.009346848353743553,
+      0.029781775549054146,
+      -0.0564642958343029
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0011",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 11,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n**8.​ Recomendaciones para el estudio de la Asignatura:**\n\nSe espera que las y los estudiantes asuman un rol activo en la construcción de sus\naprendizajes, desarrollando autonomía, pensamiento crítico y una actitud de mejora\ncontinua, competencias esenciales para el ejercicio profesional de la Ingeniería en\nSistemas de Información.\nPara favorecer el logro de los resultados de aprendizaje de la asignatura, se recomienda:\n\n✔​ Participar activamente de las clases presenciales, laboratorios, debates y actividades\n\ncolaborativas, aportando ideas, fundamentando decisiones técnicas y compartiendo\nexperiencias.\n\n✔​ Estudiar los contenidos de manera progresiva, articulando el material elaborado por la\n\ncátedra con la bibliografía obligatoria y complementaria, la documentación técnica de\nherramientas y los estándares internacionales abordados durante el cursado.\n\n✔​ Resolver de forma sistemática las guías de trabajos prácticos y los desafíos\n\npropuestos, priorizando la comprensión de los fundamentos antes que la mera\naplicación mecánica de herramientas.\n\n✔​ Utilizar de manera crítica, responsable y ética herramientas basadas en inteligencia\n\nartificial como apoyo para el aprendizaje, la generación de ideas, la elaboración de\ncasos de prueba, el análisis de código y la revisión de soluciones, validando siempre\nlos resultados obtenidos mediante criterios propios de ingeniería.\n\n✔​ Experimentar con las herramientas profesionales utilizadas durante el cursado\n\n(gestores de incidencias, plataformas de automatización, herramientas de análisis\nestático, integración continua y evaluación de calidad), promoviendo el aprendizaje\nautónomo y la adquisición de competencias demandadas por la industria del\nsoftware.\n\n✔​ Analizar casos reales de éxito y fracaso en proyectos de software, identificando los\n\nfactores técnicos, organizacionales y humanos que influyen sobre la calidad de los\nproductos desarrollados.\n\n✔​ Aprovechar los espacios de consulta, tutorías, foros del Aula Virtual y demás canales\n\nde comunicación establecidos por la cátedra para resolver dudas, intercambiar\nexperiencias y fortalecer el aprendizaje colaborativo.\n\n✔​ Desarrollar hábitos de documentación, trazabilidad y comunicación técnica durante la\n\nresolución de las actividades propuestas, favoreciendo la reproducibilidad y la calidad\nde las soluciones elaboradas.\n\n✔​ Integrar progresivamente los conocimientos adquiridos en las distintas unidades\n\ntemáticas para aplicarlos en el Trabajo Final Integrador, procurando abordar\n\n12\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      0.047171156853437424,
+      0.048299822956323624,
+      -0.019535334780812263,
+      0.008639891631901264,
+      -0.028640178963541985
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0012",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 12,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\nproblemas similares a los que enfrentan los equipos profesionales de desarrollo de\nsoftware.\n\n✔​ Mantener una actitud proactiva frente a la actualización tecnológica, considerando\n\nque las metodologías, herramientas y buenas prácticas vinculadas a la calidad de\nsoftware evolucionan permanentemente y requieren un proceso continuo de\nformación profesional.\n\nLa asignatura promueve una modalidad de aprendizaje basada en la resolución de\nproblemas, el trabajo colaborativo, la experimentación con herramientas de uso\nprofesional y la reflexión crítica sobre la calidad como atributo transversal de los sistemas\nde información. En consecuencia, el compromiso, la participación activa y el estudio\ncontinuo constituyen factores determinantes para alcanzar los resultados de aprendizaje\nprevistos.",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.020265663042664528,
+      0.01051896158605814,
+      -0.03624139726161957,
+      -0.04489906132221222,
+      0.018258387222886086
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0013",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 13,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# Uso responsable y ético de la Inteligencia Artificial\nLa cátedra promueve el uso de herramientas basadas en Inteligencia Artificial Generativa\ncomo apoyo al aprendizaje, la resolución de problemas, la generación de ideas, la revisión\nde código, el diseño de casos de prueba y la mejora de la productividad personal. Sin\nembargo, dichas herramientas deben utilizarse de manera ética, crítica y responsable.\nEn consecuencia, se espera que las y los estudiantes:\n\n✔​ Utilicen la Inteligencia Artificial como herramienta de apoyo al aprendizaje y no como\n\nsustituto de su proceso de razonamiento, análisis y toma de decisiones.\n\n✔​ Verifiquen y validen la información generada por sistemas de IA antes de incorporarla\n\nen trabajos prácticos, informes o proyectos, asumiendo la responsabilidad sobre la\ncalidad y veracidad de los resultados presentados.\n\n✔​ Declaren explícitamente, cuando corresponda, el uso de herramientas de Inteligencia\n\nArtificial en la elaboración de producciones académicas, indicando su finalidad y\nalcance.\n\n✔​ Eviten la presentación de contenido generado íntegramente por IA como producción\n\npropia, respetando los principios de honestidad académica, integridad intelectual y\nética profesional.\n\n✔​ Protejan la confidencialidad de la información, evitando compartir con herramientas\n\nde IA datos sensibles, información institucional, código propietario o cualquier otro\ncontenido sujeto a restricciones legales, contractuales o éticas.\n\nEl desarrollo de competencias profesionales implica aprender a utilizar las nuevas\ntecnologías de manera responsable, comprendiendo tanto sus oportunidades como sus\nlimitaciones. La Inteligencia Artificial constituye una herramienta de enorme potencial\n\n13\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.048218127340078354,
+      -0.007656025234609842,
+      -0.06797686964273453,
+      -0.03182949125766754,
+      0.020587101578712463
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0014",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 14,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\npara la Ingeniería en Sistemas de Información, pero su utilización exige pensamiento\ncrítico, criterio profesional y un firme compromiso con la calidad, la transparencia y la\nética.\n\n**9.​ Detalle y cronograma de las actividades sobre trabajo de campo, pasantías, visitas,**\n\n**etc. (si las hubiere)**\n\nNo se prevén trabajos de campo, pasantías, visitas, etc.\n\n14\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.006964398548007011,
+      0.010599743574857712,
+      -0.05042899399995804,
+      -0.050688911229372025,
+      0.016487516462802887
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0015",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 15,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n**10.​Sistema de Acreditación**\nLa acreditación de la asignatura se fundamenta en un enfoque de evaluación continua,\norientado a valorar el desarrollo progresivo de las competencias y de los resultados de\naprendizaje definidos para la asignatura. En este marco, el proceso de evaluación integra\ninstancias diagnósticas, formativas y sumativas que permiten evidenciar tanto la\nadquisición de conocimientos conceptuales como el desarrollo de capacidades\nprocedimentales y actitudinales.\nA lo largo del cursado, las y los estudiantes deberán resolver situaciones problemáticas,\nestudios de caso, laboratorios, actividades individuales y grupales, cuestionarios y\npresentaciones técnicas que favorezcan la integración progresiva de los contenidos. En\ntodas las instancias se valorará la capacidad de análisis, la fundamentación técnica de las\ndecisiones adoptadas, el pensamiento crítico, la aplicación de estándares y herramientas\nde Ingeniería de Calidad de Software, el trabajo colaborativo y la comunicación efectiva.\nLa asignatura contempla **cuatro (4) instancias de evaluación formativa, una**\ncorrespondiente a cada unidad temática. Estas actividades tienen como propósito\nacompañar el proceso de aprendizaje mediante la resolución de problemas de aplicación,\nlaboratorios y estudios de caso, proporcionando retroalimentación continua que permita\nconsolidar los resultados de aprendizaje antes de las instancias de acreditación. Las\nevaluaciones formativas son de carácter obligatorio y podrán desarrollarse de manera\nindividual o grupal, según la naturaleza de la actividad propuesta.\nAsimismo, la acreditación de la asignatura contempla **dos (2) instancias de evaluación**\n**sumativa:**\n**a) Evaluación Teórico-Práctica Integrada**\nConsiste en una evaluación individual destinada a valorar la comprensión e integración de\nlos principales conceptos abordados durante el cursado, así como la capacidad para\nanalizar situaciones problemáticas, seleccionar y aplicar métodos, técnicas y herramientas\nde Ingeniería de Calidad de Software, y fundamentar técnicamente las decisiones\nadoptadas.\n**b) Proyecto Integrador de Aplicación Real**\nConsiste en el desarrollo grupal de un proyecto aplicado sobre un caso de estudio o un\nsistema de software real, mediante el cual las y los estudiantes deberán integrar los\nconocimientos adquiridos durante la asignatura aplicando modelos, estándares, métricas,\ntécnicas y herramientas propias de la Ingeniería de Calidad de Software. El proyecto\nconcluirá con la presentación de un informe técnico y su correspondiente defensa oral.\n\n15\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      0.010986530221998692,
+      0.06622720509767532,
+      -0.06992363929748535,
+      -0.0515727661550045,
+      -0.012445025146007538
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0016",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 16,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n**10.1 Condiciones para la Aprobación Directa**\n\nPara acceder a la aprobación directa de la asignatura, las y los estudiantes deberán cumplir\nsimultáneamente las siguientes condiciones:\n\n - Acreditar una asistencia mínima del setenta y cinco por ciento (75 %) de las clases\n\nefectivamente dictadas.\n\n - Aprobar la evaluación teórico-práctica con una calificación igual o superior a\n\n6(seis).\n\n - Aprobar el Trabajo Final Integrador y su correspondiente coloquio.\n\n - Presentar y aprobar el 100% de las actividades formativas obligatorias previstas por\n\nla cátedra.\n\nLas y los estudiantes que no aprueben el examen parcial podrán acceder a una única\ninstancia de recuperación.\n\n**10.2 Condiciones para la Aprobación de la Cursada.**\n\nObtendrán la aprobación de cursada quienes:\n\n - Acrediten una asistencia mínima del setenta y cinco por ciento (75 %) de las clases\n\nefectivamente dictadas.\n\n - Aprueben el Trabajo Final Integrador o su instancia de recuperación.\n\n - Presenten y aprueben, como mínimo, el setenta y cinco por ciento (75 %) de las\n\nactividades formativas obligatorias previstas por la cátedra.\n\nSe prevé una única instancia de recuperación para el Trabajo Final Integrador en caso de\nno alcanzar inicialmente los criterios mínimos de aprobación.\n\n16\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      0.09067796170711517,
+      0.08796536177396774,
+      -0.015564191155135632,
+      -0.014709914103150368,
+      0.02201165072619915
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0017",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 17,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n# PLANIFICACIÓN ANUAL\n**11.​Cronograma**\n\n**Evaluación Formativa 1.** Análisis\n\nde un caso real de fallo de software.\n\n**Lunes sin clase por Feriado**\n\n**Jueves sin clase por Feriado**\n\n17\n\n|N° Semana|Período|Contenido|Actividad en Campus|RA al que contribuye|Observaciones|\n|---|---|---|---|---|---|\n|1|10/08 13/08|Presentación de asignatura. Unidad I Definición y evolución del concepto de calidad. Calidad del producto y calidad del proceso de software. Principios de gestión de la calidad. Mejora continua. Ciclo PDCA. Costos de la calidad. Aseguramiento de la calidad (Quality Assurance) y Control de Calidad (Quality Control). Evolución hacia Quality Engineering.|Lectura introductoria. Foro de presentación. Cuestionario diagnóstico.|RA1|Presentación de la asignatura y conformación de equipos.|\n|2|17/08 20/08|Unidad I Calidad durante todo el ciclo de vida del software. Calidad en enfoques ágiles y DevOps. Conceptos de Shift Left, Shift Right y Continuous Quality. Introducción a DevSecOps. Calidad en sistemas basados en Inteligencia Artificial. Observabilidad y confiabilidad del software. Introducción a Site Reliability Engineering (SRE). Análisis de incidentes reales de fallos de software|Análisis de caso. Foro de discusión.|RA1|Evaluación Formativa 1. Análisis de un caso real de fallo de software.|\n||||||Lunes sin clase por Feriado|\n|3|24/08 27/08|Unidad II Las pruebas de software dentro del ciclo de vida de desarrollo. Objetivos, principios y fundamentos del testing. Niveles y tipos de pruebas: unitarias, integración, sistema, aceptación, regresión, humo, exploratorias, rendimiento, carga, estrés, resiliencia y seguridad. Estrategias de pruebas en enfoques ágiles.|Material de estudio. Cuestionario de autoevaluación.|RA2||\n||||||Jueves sin clase por Feriado|\n|4|31/08 03/09|Unidad II Gestión del proceso de pruebas.Planificación y diseño del Plan de Pruebas. Artefactos y documentación. Gestión del ciclo de vida de defectos. Clasificación y priorización de incidentes. Trazabilidad entre requisitos, pruebas y defectos.|Laboratorio guiado.|RA2||\n\n-----\n\n|N° Semana|Período|Contenido|Actividad en Campus|RA al que contribuye|Observaciones|\n|---|---|---|---|---|---|\n|5|07/09 10/09|4° Llamado a exámenes finales||||\n|6|14/09 17/09|Unidad II Métricas de testing e indicadores de calidad. Risk-Based Testing. Continuous Testing y TestOps. Uso de herramientas colaborativas para la gestión de pruebas|Entrega de actividad formativa|RA2 RA3|Evaluación Formativa 2. Elaboración de un Plan de Pruebas.|\n|7|21/09 24/09|Unidad III Diseño de casos de prueba. Criterios de selección y cobertura. Técnicas estructurales (Caja Blanca): complejidad ciclomática, caminos independientes, cobertura de sentencias, decisiones, condiciones y caminos.|Guía de casos para resolver con técnicas de CB y CN|RA1-RA2-RA 3|Lunes sin clase por Feriado|",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.07800472527742386,
+      -0.005589303560554981,
+      0.0032921209931373596,
+      -0.019535725936293602,
+      0.019647721201181412
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0018",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 18,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n|5|07/09 10/09|4° Llamado a exámenes finales||||\n|6|14/09 17/09|Unidad II Métricas de testing e indicadores de calidad. Risk-Based Testing. Continuous Testing y TestOps. Uso de herramientas colaborativas para la gestión de pruebas|Entrega de actividad formativa|RA2 RA3|Evaluación Formativa 2. Elaboración de un Plan de Pruebas.|\n|7|21/09 24/09|Unidad III Diseño de casos de prueba. Criterios de selección y cobertura. Técnicas estructurales (Caja Blanca): complejidad ciclomática, caminos independientes, cobertura de sentencias, decisiones, condiciones y caminos.|Guía de casos para resolver con técnicas de CB y CN|RA1-RA2-RA 3|Lunes sin clase por Feriado|\n|8|28/09 01/10|Unidad III Técnicas funcionales (Caja Negra): particiones de equivalencia, análisis de valores límite, tablas de decisión, transición de estados, casos de uso y conjetura de errores.|Guía de casos para resolver con técnicas de CB y CN|RA3||\n|9|05/10 08/10|Unidad III Técnicas basadas en riesgos y experiencia. Pairwise Testing. Mutation Testing. Property-Based Testing. Model-Based Testing. Introducción al Prompt Testing para aplicaciones basadas en modelos de lenguaje (LLMs). Uso de herramientas de Inteligencia Artificial para asistir el diseño, revisión y optimización de casos de prueba..|Laboratorio de Prompt Testing|RA4|Evaluación Formativa 3. Entrega de Laboratorio|\n|10|12/10 15/10|Unidad IV Fundamentos de automatización de pruebas. Beneficios, limitaciones y criterios de selección. Estrategias para automatizar pruebas funcionales y no funcionales.|Trabajo de investigación|RA4|Lunes sin clase por Feriado|\n|11|19/10 22/10|Evaluación Sumativa N°1:Evaluación teórico-práctica||||",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.0336432084441185,
+      0.07161872088909149,
+      -0.05335785448551178,
+      -0.012393316254019737,
+      0.04891854524612427
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0019",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 19,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n18\n\n-----\n\n|N° Semana|Período|Contenido|Actividad en Campus|RA al que contribuye|Observaciones|\n|---|---|---|---|---|---|\n|12|26/10 29/10|Unidad IV Automatización de interfaces web, APIs y aplicaciones móviles. Frameworks modernos de automatización. Automatización mediante Playwright, Cypress, Selenium 4, Appium y REST Assured. Conceptos de Self-Healing Tests y automatización asistida por Inteligencia Artificial. Automatización de pruebas visuales. Buenas prácticas para el mantenimiento de suites automatizadas.|Laboratorio Práctico|RA4-RA5|Evaluación Formativa 4 Entrega de laboratorio|\n|13|02/11 05/11|Unidad V Modelos de calidad de producto y proceso. Evolución de ISO 9126 hacia ISO/IEC 25010 y familia SQuaRE. Características y subcaracterísticas de calidad. Modelos de madurez de procesos. Evolución de CMM hacia CMMI. Áreas de proceso y niveles de madurez.|Podcast grupal “Modelos de calidad aplicados”|RA1-RA2-RA 3|Entrega del hito 1 TFI|\n|14|09/11 12/11|Unidad V Métricas orientadas al producto, proceso y proyecto. Indicadores de desempeño. Deuda técnica y mantenibilidad. Métricas de calidad de código mediante herramientas de análisis estático (SonarQube). Introducción a métricas DORA y SPACE para evaluación de equipos de desarrollo. Métricas para sistemas basados en Inteligencia Artificial.|Laboratorio de aplicacion|RA6|Entrega del hito 2 TFI|\n|15|16/11 19/11|Unidad Vi Calidad en uso. Diseño Centrado en el Usuario (UCD) y Human-Centered Design. Experiencia de Usuario (UX) y Experiencia del Cliente (CX). Diseño inclusivo y accesibilidad digital. Principios de accesibilidad según WCAG 2.2. Métodos de investigación con usuarios. Evaluación heurística.||RA1–RA5|Tutorías y revisión de avances.|\n|16|23/11 26/11|Unidad Vi Pruebas de usabilidad. Evaluación cognitiva. Journey Mapping. Service Blueprint. Instrumentación y análisis del comportamiento del usuario mediante herramientas de analítica digital. Introducción al Human-Centered AI. Evaluación de interfaces asistidas por Inteligencia Artificial. Consideraciones éticas en el diseño y evaluación de productos digitales.|Dashboard de indicadores de calidad|RA1–RA5|Entrega TFI|",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.08410172164440155,
+      -0.0110208410769701,
+      0.05046628415584564,
+      0.006926756352186203,
+      0.005167859606444836
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0020",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 20,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n19\n\n-----\n\n|N° Semana|Período|Contenido|Actividad en Campus|RA al que contribuye|Observaciones|\n|---|---|---|---|---|---|\n||||||Lunes sin clase por Feriado|\n|17|30/11 03/12|Evaluación Sumativa N° 2: Coloquio TFI||||\n|18|07/12 10/12|Recuperatorio Evaluación Teórico-Práctica Recuperatorio TFI||||",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.02663593180477619,
+      0.024146970361471176,
+      0.04641939699649811,
+      0.001328999176621437,
+      0.0678536593914032
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0021",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 21,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n**12.​Bibliografía según las Normas APA:**\n\n**_Bibliografía básica_**\n\n✔​ Pressman, R. S.. (2005). Software Engineering: A Practitioner's Approach (9th ed.).\n\nMcGraw-Hill.\n\n✔​ Sommerville, I. (2020). Engineering software products (Vol. 355). London, UK: Pearson.\n\n✔​ Mohan, G. (2022). Full Stack Testing: A Practical Guide for Delivering High Quality\n\n_Software. O'Reilly Media._\n\n✔​ Naik, K., & Tripathy, P. (2011). Software testing and quality assurance: theory and practice.\n\nJohn Wiley & Sons.\n\n**_Recursos digitales recomendados_**\n\n✔​ Interaction Design Foundation. (s. f.). User-centered design. Interaction Design\n\nFoundation. Recuperado el 26 de junio de 2026, de\n[https://ixdf.org/literature/topics/user-centered-design](https://ixdf.org/literature/topics/user-centered-design)\n\n✔​ Human Centered Design. (s. f.). Human Centered Design.\n\n[https://humancentereddesign.org/](https://humancentereddesign.org/)\n\n[✔​ Nielsen Norman Group. (s. f.). Nielsen Norman Group. https://www.nngroup.com/](https://www.nngroup.com/)\n\n✔​ Documentación oficial de Playwright.\n\n✔​ Documentación oficial de Cypress.\n\n✔​ Documentación oficial de SonarQube.\n\n✔​ OWASP Testing Guide.\n\n✔​ GitHub Actions Documentation.\n\n21\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.12168270349502563,
+      -0.007028831634670496,
+      -0.037942346185445786,
+      -0.04091104120016098,
+      -0.035431284457445145
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0022",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 22,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n✔​ Microsoft Learn.\n\n✔​ Postman Learning Center.\n\n22\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      0.0009870564099401236,
+      0.027285797521471977,
+      -0.03847554698586464,
+      -0.04108332097530365,
+      0.0019314978271722794
+    ]
+  },
+  {
+    "id": "moodle_2_nivel_4_pa_aspectos_a_2026_ingenieria_informatica_0023",
+    "metadata": {
+      "año_academico": "2026",
+      "carrera": "Ingeniería Informática",
+      "chunk_index": 23,
+      "module": "Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "source": "moodle_2_Nivel 4 - PA Aspectos Avanzados de Calidad de Software 2026.docx.pdf",
+      "total_chunks": 24
+    },
+    "document": "# PLANIFICACIÓN ANUAL\n**13.​Anexo:**\n\n**13.1.​ Reuniones de asignatura y/o área:**\n\n**13.1.1.​Detalle y cronograma previsto de reuniones de cátedra y/o área.**\n\n**Lugar en el que** **Fecha y Hora a**\n\n**Tema/s a tratar en la**\n\n**Involucrados** **se desarrollará** **desarrollarse la**\n\n**reunión**\n\n**la reunión.** **reunión**\n\nEquipo de Sala de Julio 2026 - Evaluación de resultados\ncátedra profesores 2025 luego se\n\n - Primer borrador de\n\nplanificación 2026\n\nEquipo de Sala de Agosto 2026 - Revisión de Planificación\ncátedra profesores 2026 con versión final\n\n2026\n\nEquipo de Virtual Octubre 2026 Seguimiento de TFs\nCátedra\n\nEquipo de Virtual Diciembre 2026 - Evaluación de TFs\nCátedra - Definición de criterios de\n\nevaluación coloquios\n\n**13.2.​ Investigación y Extensión de la cátedra**\n\nDado que el contenido de la asignatura coincide con una de las líneas prioritarias del Centro de\nInvestigación Aplicada en TICs, donde el equipo docente dirige proyectos en la temática, los y\nlas estudiantes serán incentivados a participar de las actividades de dichos proyectos y aplicar\na las posiciones disponibles dentro de los mismos. Se fomentará la aplicación y difusión de los\nresultados de investigación para el enriquecimiento del dictado de la asignatura.\n\nNo se prevén actividades de extensión\n\n23\n\n|Involucrados|Lugar en el que se desarrollará la reunión.|Fecha y Hora a desarrollarse la reunión|Tema/s a tratar en la reunión|Observaciones|\n|---|---|---|---|---|\n|Equipo de cátedra|Sala de profesores|Julio 2026|●​ Evaluación de resultados 2025 ●​ Primer borrador de planificación 2026|Se elabora y luego se consensua en todo el equipo de cátedra|\n|Equipo de cátedra|Sala de profesores|Agosto 2026|●​ Revisión de Planificación 2026 con versión final|Se obtiene la versión final de planificación 2026|\n|Equipo de Cátedra|Virtual|Octubre 2026|Seguimiento de TFs||\n|Equipo de Cátedra|Virtual|Diciembre 2026|●​ Evaluación de TFs ●​ Definición de criterios de evaluación coloquios||\n\n-----",
+    "embedding_dim": 384,
+    "embedding_sample": [
+      -0.014471751637756824,
+      0.021730387583374977,
+      0.03561977297067642,
+      0.026783809065818787,
+      0.027715375646948814
+    ]
+  }
+]

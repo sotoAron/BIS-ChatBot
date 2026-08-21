@@ -35,7 +35,8 @@ NO_CONTEXT_MESSAGE = (
 
 # Límite máximo de caracteres de contexto para no saturar la ventana del LLM
 # Qwen 2.5 3B: ~4096 tokens ≈ 16000 caracteres
-MAX_CONTEXT_CHARS = 6000
+# Reducido a 3000 para optimizar drásticamente la latencia de evaluación en CPU
+MAX_CONTEXT_CHARS = 3000
 
 # ── Diccionario de sinónimos para expansión de consulta ───────────────────────
 # Inyectados ANTES de vectorizar la query para aumentar el recall semántico.
@@ -52,6 +53,7 @@ SYNONYM_MAP: dict[str, list[str]] = {
     "trabajo":       ["tp", "trabajo práctico", "entrega"],
     "aprobar":       ["acreditar", "promocionar", "regularizar"],
     "condición":     ["requisito", "reglamento", "criterio"],
+    "aacsw":         ["Aspectos Avanzados de Calidad de Software"],
 }
 
 
@@ -117,7 +119,11 @@ def build_rag_prompt(docs: list[dict[str, Any]], base_system_prompt: str = "") -
         "académico proporcionado a continuación.\n"
         "VOCABULARIO: Trata 'parcial', 'examen' y 'evaluación' como sinónimos absolutos. "
         "Cuando el contexto mencione 'examen' y el usuario pregunte por 'parcial' (o viceversa), "
-        "interprétalos como el mismo concepto."
+        "interprétalos como el mismo concepto. "
+        "Adicionalmente, ten en cuenta que siglas como 'aacsw' o 'AACSW' se refieren a la asignatura 'Aspectos Avanzados de Calidad de Software'.\n"
+        "INSTRUCCIÓN IMPORTANTE: Los datos en las tablas (formato Markdown) aplican a la materia del documento. "
+        "Si te preguntan por la carga horaria, nivel o ciclo de AACSW, extrae el valor directamente de la fila correspondiente (ej: '|Carga Horaria Total|...|'), "
+        "asumiendo que pertenece a la asignatura, aunque la sigla no aparezca en esa fila exacta."
     )
 
     if not docs:
@@ -235,11 +241,19 @@ class Retriever:
         embedding = await self._embed(expanded_query)
         embedding_list = embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
 
-        # 2. Filtro obligatorio de metadatos
-        where_filter = {
-            "año_academico": año_academico,
-            "carrera":       carrera,
-        }
+        # 2. Filtro obligatorio de metadatos (solo añade si tienen valor)
+        where_filter = {}
+        
+        # En ChromaDB, múltiples condiciones requieren $and si hay más de una.
+        # Simplificación: si pasamos un dict con varias claves, ChromaDB hace un AND implícito.
+        if año_academico:
+            where_filter["año_academico"] = año_academico
+        if carrera:
+            where_filter["carrera"] = carrera
+            
+        # Si after filtering where_filter is empty, pass None to avoid ChromaDB query errors
+        if not where_filter:
+            where_filter = None
 
         # 3. Consulta al vector store
         raw_results = self._store.query(

@@ -14,6 +14,7 @@ SEGURIDAD:
 """
 import json
 import logging
+import time
 from typing import AsyncGenerator
 
 import httpx
@@ -96,6 +97,10 @@ class OllamaClient:
             },
         }
 
+        t_start = time.perf_counter()
+        t_first_token: float | None = None
+        token_count = 0
+
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
                 async with client.stream(
@@ -121,9 +126,30 @@ class OllamaClient:
                         # Extraer el token del campo message.content
                         chunk = data.get("message", {}).get("content", "")
                         if chunk:
+                            if t_first_token is None:
+                                t_first_token = time.perf_counter()
+                                ttft = t_first_token - t_start
+                                logger.info("⏱️ [LLM] Tiempo hasta el primer token (TTFT / Prompt Eval): %.2fs", ttft)
+                            token_count += 1
                             yield chunk
 
                         if data.get("done", False):
+                            t_end = time.perf_counter()
+                            total_s = t_end - t_start
+                            ttft_s = (t_first_token - t_start) if t_first_token else total_s
+                            gen_s = (t_end - t_first_token) if t_first_token else 0.0
+                            tok_per_sec = (token_count / gen_s) if gen_s > 0 else 0.0
+
+                            # Estadísticas nativas de Ollama (en nanosegundos)
+                            prompt_eval_ns = data.get("prompt_eval_duration", 0)
+                            eval_ns = data.get("eval_duration", 0)
+                            prompt_tokens = data.get("prompt_eval_count", 0)
+                            eval_tokens = data.get("eval_count", token_count)
+
+                            logger.info(
+                                "⏱️ [LLM STATS] Total: %.2fs | TTFT (Prompt Eval): %.2fs (%d tokens) | Gen: %.2fs (%d tokens @ %.1f tok/s)",
+                                total_s, ttft_s, prompt_tokens, gen_s, eval_tokens, tok_per_sec,
+                            )
                             break
 
         except httpx.ConnectError as exc:
