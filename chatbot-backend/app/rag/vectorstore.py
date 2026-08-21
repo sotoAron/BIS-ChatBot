@@ -17,7 +17,7 @@ FILTRADO ESTRICTO (Fase 3):
   evitar que el LLM use información de otros planes de estudio o años.
 """
 import logging
-from typing import Optional
+from typing import Optional, Any
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
@@ -125,11 +125,11 @@ class VectorStore:
             for doc, meta, dist in zip(docs, metas, distances)
         ]
 
-    def add(
+    def upsert(
         self,
         documents: list[str],
         embeddings: list[list[float]],
-        metadatas: list[dict],
+        metadatas: list[dict[str, Any]],
         ids: list[str],
     ) -> None:
         """
@@ -143,6 +143,13 @@ class VectorStore:
             ids=ids,
         )
         logger.info("Upsert de %d chunks en ChromaDB.", len(documents))
+
+    def get(self, where: dict[str, Any], include: list[str] | None = None) -> dict[str, Any]:
+        """
+        Retrieves documents matching metadata filters.
+        """
+        _include = include or ["metadatas", "documents"]
+        return self._collection.get(where=where, include=_include)
 
     def delete_by_source(self, source: str) -> int:
         """
