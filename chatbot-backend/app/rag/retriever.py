@@ -36,7 +36,7 @@ NO_CONTEXT_MESSAGE = (
 # Límite máximo de caracteres de contexto para no saturar la ventana del LLM
 # Qwen 2.5 3B: ~4096 tokens ≈ 16000 caracteres
 # Reducido a 3000 para optimizar drásticamente la latencia de evaluación en CPU
-MAX_CONTEXT_CHARS = 3000
+MAX_CONTEXT_CHARS = 6000
 
 # ── Diccionario de sinónimos para expansión de consulta ───────────────────────
 # Inyectados ANTES de vectorizar la query para aumentar el recall semántico.
@@ -142,11 +142,8 @@ def build_rag_prompt(docs: list[dict[str, Any]], base_system_prompt: str = "") -
         if not text:
             continue
             
-        # Truncar cada fragmento individualmente para poder acomodar más fragmentos (aumenta recall)
-        # sin exceder el límite global MAX_CONTEXT_CHARS.
-        max_chunk_size = 800
-        if len(text) > max_chunk_size:
-            text = text[:max_chunk_size] + "..."
+        # Se eliminó la truncación individual de chunks para evitar perder datos vitales
+        # al final de chunks largos (ej. la tabla de profesores en chunk 0).
 
         # Etiquetar con fuente para trazabilidad
         label   = f"[{i}] {source}" + (f" — {module}" if module else "")
@@ -269,36 +266,26 @@ class Retriever:
         )
 
         # 3.5. Ensure chunk_index=0 is always considered for administrative context
-        if where_filter:
-            chunk_0_filter = dict(where_filter)
-            chunk_0_filter["chunk_index"] = 0
-            # If multiple conditions, ChromaDB needs $and. For simplicity if year and career exist:
-            if "año_academico" in where_filter and "carrera" in where_filter:
-                chunk_0_filter = {
-                    "$and": [
-                        {"año_academico": where_filter["año_academico"]},
-                        {"carrera": where_filter["carrera"]},
-                        {"chunk_index": 0}
-                    ]
-                }
-            chunk_0_results = self._store.get(where=chunk_0_filter)
+        chunk_0_filter = dict(where_filter) if where_filter else {}
+        chunk_0_filter["chunk_index"] = 0
+        chunk_0_results = self._store.get(where=chunk_0_filter)
             
-            if chunk_0_results and chunk_0_results.get("documents"):
-                # If we have chunk 0, artificially prepend it with a perfect score if not already present
-                has_chunk_0 = False
-                for doc in raw_results:
-                    if doc.get("metadata", {}).get("chunk_index") == 0:
-                        has_chunk_0 = True
-                        break
-                
-                if not has_chunk_0:
-                    # Construct a raw result dict for chunk 0
-                    chunk_0_doc = {
-                        "document": chunk_0_results["documents"][0],
-                        "metadata": chunk_0_results["metadatas"][0],
-                        "distance": 0.0, # force highest score
-                    }
-                    raw_results.insert(0, chunk_0_doc)
+        if chunk_0_results and chunk_0_results.get("documents"):
+            # If we have chunk 0, artificially prepend it with a perfect score if not already present
+            has_chunk_0 = False
+            for doc in raw_results:
+                if doc.get("metadata", {}).get("chunk_index") == 0:
+                    has_chunk_0 = True
+                    break
+            
+            if not has_chunk_0:
+                # Construct a raw result dict for chunk 0
+                chunk_0_doc = {
+                    "document": chunk_0_results["documents"][0],
+                    "metadata": chunk_0_results["metadatas"][0],
+                    "distance": 0.0, # force highest score
+                }
+                raw_results.insert(0, chunk_0_doc)
 
         # 4. Filtrar por umbral mínimo de similitud
         # ChromaDB con hnsw:space=cosine devuelve DISTANCIAS en [0, 2]:

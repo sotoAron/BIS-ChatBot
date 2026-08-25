@@ -117,12 +117,12 @@ def _sse_error(message: str, code: int = 500) -> str:
     return f"data: {json.dumps({'error': message, 'code': code})}\n\n"
 
 
-async def _stream_from_cache(response: str) -> AsyncGenerator[str, None]:
+async def _stream_from_cache(response: str, timings: dict | None = None) -> AsyncGenerator[str, None]:
     """Simula streaming para respuestas cacheadas (bloques de ~10 chars)."""
     chunk_size = 10
     for i in range(0, len(response), chunk_size):
         yield _sse_chunk({"chunk": response[i:i + chunk_size], "cached": True})
-    yield _sse_done()
+    yield _sse_done(timings=timings)
 
 
 async def _stream_no_context() -> AsyncGenerator[str, None]:
@@ -198,7 +198,7 @@ async def _stream_from_llm(
             f"║       📍 Destino Enrutador   : {timings_summary.get('intent_destination', 'N/A')}\n"
             f"║ 🔹 [3] Búsqueda en Caché     : {timings_summary.get('cache_ms', 0):>6.1f} ms  ({timings_summary.get('cache_result', 'MISS')})\n"
             f"║ 🔹 [4] Carga de Historial    : {timings_summary.get('history_ms', 0):>6.1f} ms\n"
-            f"║ 🔹 [5] Búsqueda RAG ChromaDB : {timings_summary.get('rag_ms', 0):>6.1f} ms  ({timings_summary.get('rag_docs_count', 0)} chunks recuperados)\n"
+            f"║ 🔹 [5] Búsqueda RAG ChromaDB : {timings_summary.get('rag_ms', 0):>6.1f} ms  ({timings_summary.get('rag_docs_count', 0)} chunks: {timings_summary.get('rag_chunks', [])})\n"
             f"║ 🔹 [6] LLM Prompt Eval (TTFT): {ttft_s:>6.2f} s   (Evaluación de contexto en CPU Ollama)\n"
             f"║ 🔹 [7] LLM Generación Texto  : {gen_s:>6.2f} s   ({token_count} tokens @ {tok_speed:.1f} tok/s)\n"
             "║ ────────────────────────────────────────────────────────────────────────────\n"
@@ -363,8 +363,10 @@ async def _chat_stream_handler(
         pipeline_timings["cache_ms"] = round((time.perf_counter() - t_cache_start) * 1000, 2)
         if cached_response:
             pipeline_timings["cache_result"] = "HIT"
+            t_total_cache = time.perf_counter() - t0
+            pipeline_timings["pipeline_total_s"] = round(t_total_cache, 4)
             logger.info("Cache HIT para user_id=%s (%.2f ms)", user_id, pipeline_timings["cache_ms"])
-            generator = _stream_from_cache(cached_response)
+            generator = _stream_from_cache(cached_response, timings=pipeline_timings)
             
             return StreamingResponse(
                 generator,
@@ -511,21 +513,25 @@ async def _chat_stream_handler(
                     carrera=effective_car,
                 )
                 rag_docs = rag_result.docs
+                chunk_indices = [doc.get("metadata", {}).get("chunk_index") for doc in rag_docs]
                 pipeline_timings["rag_ms"] = round((time.perf_counter() - t_rag_start) * 1000, 2)
                 pipeline_timings["rag_docs_count"] = len(rag_docs)
+                pipeline_timings["rag_chunks"] = chunk_indices
                 logger.info(
                     "RAG: %d docs recuperados en %.2f ms para user_id=%s "
                     "(año=%s, carrera='%s')",
                     len(rag_docs), pipeline_timings["rag_ms"], user_id, effective_año, effective_car,
                 )
-                logger.info("RAG CHUNKS RECUPERADOS: %s", [doc.get("metadata", {}).get("chunk_index") for doc in rag_docs])
+                logger.info("RAG CHUNKS RECUPERADOS: %s", chunk_indices)
             except Exception as rag_err:
                 pipeline_timings["rag_ms"] = round((time.perf_counter() - t_rag_start) * 1000, 2)
                 pipeline_timings["rag_docs_count"] = 0
+                pipeline_timings["rag_chunks"] = []
                 logger.warning("Error en RAG: %s", rag_err)
         else:
             pipeline_timings["rag_ms"] = 0.0
             pipeline_timings["rag_docs_count"] = 0
+            pipeline_timings["rag_chunks"] = []
             logger.info(
                 "RAG omitido: ChromaDB %s.",
                 f"vacío ({total_docs} docs)" if vector_store else "no disponible",

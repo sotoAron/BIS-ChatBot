@@ -144,12 +144,24 @@ class VectorStore:
         )
         logger.info("Upsert de %d chunks en ChromaDB.", len(documents))
 
-    def get(self, where: dict[str, Any], include: list[str] | None = None) -> dict[str, Any]:
+    def get(self, where: dict[str, Any] | None = None, include: list[str] | None = None) -> dict[str, Any]:
         """
         Retrieves documents matching metadata filters.
         """
         _include = include or ["metadatas", "documents"]
-        return self._collection.get(where=where, include=_include)
+        chroma_where = None
+        if where:
+            if "$and" in where or "$or" in where:
+                chroma_where = where
+            elif len(where) == 1:
+                chroma_where = where
+            elif len(where) > 1:
+                chroma_where = {"$and": [{k: v} for k, v in where.items()]}
+
+        kwargs: dict = {"include": _include}
+        if chroma_where:
+            kwargs["where"] = chroma_where
+        return self._collection.get(**kwargs)
 
     def delete_by_source(self, source: str) -> int:
         """

@@ -74,7 +74,9 @@ def stream_chat(url: str, token: str, question: str, año: str = "2026", carrera
                                 print(f"    ➔ Destino Enrutador   : {timings.get('intent_destination', 'N/A')}")
                                 print(f"  • Caché Semántica       : {timings.get('cache_ms', 0):>7.2f} ms  [{timings.get('cache_result', 'N/A')}]")
                                 print(f"  • Carga Historial       : {timings.get('history_ms', 0):>7.2f} ms")
-                                print(f"  • Búsqueda RAG ChromaDB : {timings.get('rag_ms', 0):>7.2f} ms  ({timings.get('rag_docs_count', 0)} chunks)")
+                                rag_chunks = timings.get("rag_chunks")
+                                rag_chunks_str = f" ➔ Chunks: {rag_chunks}" if rag_chunks is not None else ""
+                                print(f"  • Búsqueda RAG ChromaDB : {timings.get('rag_ms', 0):>7.2f} ms  ({timings.get('rag_docs_count', 0)} chunks{rag_chunks_str})")
                                 print(f"  • LLM Tiempo 1er Token  : {timings.get('llm_ttft_s', 0):>7.2f} s   (Evaluación de contexto en CPU)")
                                 print(f"  • LLM Generación        : {timings.get('llm_gen_s', 0):>7.2f} s   ({timings.get('llm_tokens', 0)} tokens @ {timings.get('llm_speed_tok_s', 0)} tok/s)")
                                 print("  " + "─" * 66)
