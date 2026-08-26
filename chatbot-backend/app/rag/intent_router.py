@@ -22,32 +22,23 @@ class Intent(str, Enum):
     COURSES = "COURSES"
     GRADES = "GRADES"
     ASSIGNMENTS = "ASSIGNMENTS"
+    GREETING = "GREETING"
+    ESCALATION = "ESCALATION"
+    OOD = "OOD"
     RAG = "RAG"
 
 
 class IntentRouter:
-    # Orden estricto de evaluación (del mayor impacto al menor)
-    # Se usa re.IGNORECASE por defecto.
+    # Orden estricto de evaluación para atajos rápidos (O(1))
+    # Las intenciones complejas ahora se derivan del LLM en query_rewriter
     RULES = [
         (
-            Intent.CALENDAR_WRITE,
-            r"\b(agendar|agenda|añadir al calendario|agregar al calendario|anotar|anota|anotá|al calendario|en mi calendario|recordatorio)\b"
+            Intent.ESCALATION,
+            r"\b(hablar con un humano|contacto|ayuda|secretaria|alumnado|profesor|operador|persona)\b"
         ),
         (
-            Intent.SYNC,
-            r"\b(sincronizar|sincroniza|sincronización|leer pdf|cargar pdf|descargar planificación|actualizar programa)\b"
-        ),
-        (
-            Intent.COURSES,
-            r"\b(mis cursos|qué cursos|estoy inscripto|estoy matriculado|materias|qué materias)\b"
-        ),
-        (
-            Intent.GRADES,
-            r"\b(mis notas|calificaciones|nota|calificación|qué me saqué|aprobé)\b"
-        ),
-        (
-            Intent.ASSIGNMENTS,
-            r"\b(mis tareas|tareas|entrega|vencimiento|pendientes|trabajo práctico)\b"
+            Intent.GREETING,
+            r"^(hola|buen dia|buen día|buenas tardes|buenas noches|buenas|saludos)\b"
         ),
     ]
 
@@ -57,6 +48,9 @@ class IntentRouter:
         Intent.COURSES: "Tool: Moodle Courses (core_enrol_get_users_courses)",
         Intent.GRADES: "Tool: Moodle Grades (gradereport_user_get_grade_items)",
         Intent.ASSIGNMENTS: "Tool: Moodle Assignments (mod_assign_get_assignments)",
+        Intent.GREETING: "System: Static Greeting Message",
+        Intent.ESCALATION: "System: Static Escalation Message",
+        Intent.OOD: "System: Static Out of Domain Message",
         Intent.RAG: "Motor RAG (Búsqueda Vectorial en ChromaDB + Inyección de Contexto)",
     }
 
@@ -66,12 +60,11 @@ class IntentRouter:
         return cls.DESTINATIONS.get(intent, "Desconocido")
 
     @classmethod
-    def classify(cls, text: str) -> Intent:
+    def classify(cls, text: str) -> Intent | None:
         """
-        Clasifica el texto en una intención basada en jerarquía estricta.
-        Retorna Intent.RAG si no hace match con nada (fallback).
+        Clasifica atajos rápidos. Si no hace match, retorna None para que evalúe el LLM.
         """
         for intent, pattern in cls.RULES:
             if re.search(pattern, text, re.IGNORECASE):
                 return intent
-        return Intent.RAG
+        return None

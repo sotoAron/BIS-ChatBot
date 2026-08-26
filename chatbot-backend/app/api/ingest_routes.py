@@ -46,8 +46,8 @@ async def ingest_document(
     año_academico: str = Form(..., description="Año académico (ej. 2026)"),
     carrera: str = Form(..., description="Nombre de la carrera"),
     module: str = Form("", description="Módulo o sección del documento (opcional)"),
-    chunk_size: int = Form(512, description="Tamaño máximo de cada chunk en caracteres"),
-    chunk_overlap: int = Form(64, description="Solapamiento entre chunks en caracteres"),
+    chunk_size: int = Form(1500, description="Tamaño máximo de cada chunk en caracteres"),
+    chunk_overlap: int = Form(256, description="Solapamiento entre chunks en caracteres"),
     _user: dict = Depends(_require_teacher),
 ):
     """

@@ -57,6 +57,7 @@ class OllamaClient:
         history: list[dict] | None = None,
         temperature: float = 0.7,
         max_tokens: int = 1024,
+        format: str | None = None,
     ) -> AsyncGenerator[str, None]:
         """
         Genera una respuesta en streaming, token a token.
@@ -69,6 +70,7 @@ class OllamaClient:
             history:       Lista de turnos anteriores [{"role": ..., "content": ...}].
             temperature:   Temperatura de muestreo (0.0 = determinista).
             max_tokens:    Límite de tokens en la respuesta.
+            format:        Fuerza la salida (ej. "json").
 
         Yields:
             str: Cada fragmento de texto generado por el modelo.
@@ -94,8 +96,11 @@ class OllamaClient:
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
+                "num_ctx": 2048,
             },
         }
+        if format:
+            payload["format"] = format
 
         t_start = time.perf_counter()
         t_first_token: float | None = None

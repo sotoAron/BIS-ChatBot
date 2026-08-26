@@ -7,6 +7,8 @@ la intención detectada, y retornar los resultados como contexto para el LLM.
 import logging
 import json
 from typing import Any, Optional
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from app.rag.moodle_sync import sync_course_pdf
 from app.services.moodle_client import get_moodle_client
@@ -18,6 +20,24 @@ class ToolExecutor:
     Ejecuta acciones en Moodle y otros servicios basándose en la intención
     y los parámetros extraídos.
     """
+
+    @classmethod
+    async def resolve_course_id(cls, user_id: int, search_term: str) -> Optional[int]:
+        """Busca el ID de un curso basado en una abreviatura o nombre corto."""
+        client = get_moodle_client()
+        try:
+            courses = await client.get_user_courses(user_id)
+            if not courses:
+                return None
+            search_term = search_term.lower()
+            for c in courses:
+                if search_term in c.get("shortname", "").lower() or search_term in c.get("fullname", "").lower():
+                    return c.get("id")
+            return None
+        except Exception as e:
+            logger.error("Tool Error (resolve_course_id): %s", e)
+            return None
+
 
     @classmethod
     async def get_my_courses(cls, user_id: int) -> str:
@@ -44,48 +64,85 @@ class ToolExecutor:
 
     @classmethod
     async def get_pending_assignments(cls, user_id: int) -> str:
-        """Consulta tareas pendientes del usuario."""
+        """Consulta tareas pendientes combinando mod_assign y calendario."""
         client = get_moodle_client()
         try:
-            data = await client.get_course_assignments()
-            if not data or "courses" not in data:
-                return "No se encontraron tareas pendientes."
+            # 1. Obtener eventos de calendario
+            cal_data = await client.get_calendar_events()
+            events = cal_data.get("events", [])
+            
+            # 2. Obtener assignments puros
+            assign_data = await client.get_course_assignments()
+            courses_assign = assign_data.get("courses", [])
+            
+            if not events and not courses_assign:
+                return "No tienes tareas o eventos pendientes registrados."
                 
-            result = []
-            for course in data["courses"]:
+            result_set = set()
+            tz = ZoneInfo("America/Argentina/Buenos_Aires")
+            
+            # Procesar eventos de calendario
+            for event in events:
+                e_name = event.get("name", "Evento")
+                c_name = event.get("course", {}).get("fullname", "General")
+                due = event.get("timestart", 0)
+                due_date = datetime.fromtimestamp(due, tz=tz).strftime('%Y-%m-%d %H:%M') if due else "Sin fecha"
+                result_set.add(f"- {c_name}: {e_name} (Fecha: {due_date})")
+                
+            # Procesar assignments
+            for course in courses_assign:
                 c_name = course.get("fullname", f"Curso {course.get('id')}")
                 for assign in course.get("assignments", []):
                     a_name = assign.get("name", "Tarea")
                     due = assign.get("duedate", 0)
-                    result.append(f"- {c_name}: {a_name} (Vence timestamp: {due})")
+                    due_date = datetime.fromtimestamp(due, tz=tz).strftime('%Y-%m-%d %H:%M') if due else "Sin fecha"
+                    result_set.add(f"- {c_name}: {a_name} (Fecha: {due_date})")
             
-            if not result:
-                return "No tienes tareas pendientes."
-            return "Tareas pendientes:\n" + "\n".join(result)
+            if not result_set:
+                return "No tienes tareas o eventos pendientes."
+            
+            # Ordenar para consistencia
+            result_list = sorted(list(result_set))
+            return "Tareas y eventos pendientes:\n" + "\n".join(result_list)
         except Exception as e:
             logger.error("Tool Error (get_pending_assignments): %s", e)
             return "Ocurrió un error al consultar las tareas en Moodle."
 
     @classmethod
-    async def get_my_grades(cls, user_id: int, course_id: int) -> str:
-        """Consulta calificaciones del usuario en un curso."""
+    async def get_my_grades(cls, user_id: int, course_id: Optional[int] = None) -> str:
+        """Consulta calificaciones del usuario. Si course_id es None, busca en todos sus cursos."""
         client = get_moodle_client()
         try:
-            data = await client.get_user_grades(user_id, course_id)
-            if not data or "usergrades" not in data:
-                return "No se encontraron calificaciones."
+            courses = []
+            if course_id:
+                courses.append({"id": course_id, "fullname": "Materia especificada"})
+            else:
+                courses = await client.get_user_courses(user_id)
+                if not courses:
+                    return "No estás inscripto en ningún curso para consultar calificaciones."
             
             result = []
-            for ugrade in data["usergrades"]:
-                for item in ugrade.get("gradeitems", []):
-                    itemname = item.get("itemname")
-                    grade = item.get("gradeformatted")
-                    if itemname and grade and grade != "-":
-                        result.append(f"- {itemname}: {grade}")
+            for course in courses:
+                cid = course.get("id")
+                cname = course.get("fullname", f"Curso {cid}")
+                data = await client.get_user_grades(user_id, cid)
+                
+                if data and "usergrades" in data:
+                    course_grades = []
+                    for ugrade in data["usergrades"]:
+                        for item in ugrade.get("gradeitems", []):
+                            itemname = item.get("itemname")
+                            grade = item.get("gradeformatted")
+                            if itemname and grade and grade != "-":
+                                course_grades.append(f"  - {itemname}: {grade}")
+                    
+                    if course_grades:
+                        result.append(f"**{cname}**:")
+                        result.extend(course_grades)
             
             if not result:
-                return "Aún no hay calificaciones registradas para este curso."
-            return "Tus calificaciones:\n" + "\n".join(result)
+                return "Aún no hay calificaciones registradas para ti."
+            return "Tus calificaciones en el sistema:\n" + "\n".join(result)
         except Exception as e:
             logger.error("Tool Error (get_my_grades): %s", e)
             return "Ocurrió un error al consultar las calificaciones en Moodle."

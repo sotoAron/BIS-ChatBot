@@ -123,9 +123,10 @@ async def sync_course_pdf(
     ]
     metadatas = [metadata.to_chunk_meta(i, total) for i in range(total)]
 
-    # 6. Upsert en ChromaDB
+    # 6. Limpiar versión anterior y Upsert en ChromaDB
     vs = get_vector_store()
-    vs.add(
+    vs.delete_by_source(metadata.source)
+    vs.upsert(
         documents=chunks,
         embeddings=processed_embeddings,
         metadatas=metadatas,

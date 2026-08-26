@@ -233,7 +233,33 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 3. CONTROL DEL PANEL (abrir / cerrar)
+  // 3. PERSISTENCIA DE SESIÓN (SESSIONSTORAGE)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  function saveHistory() {
+    try {
+      sessionStorage.setItem('ia_chatbot_history', els.messages.innerHTML);
+    } catch (e) {
+      console.warn('[ia_chatbot] No se pudo guardar el historial en sessionStorage', e);
+    }
+  }
+
+  function loadHistory() {
+    try {
+      const historyHtml = sessionStorage.getItem('ia_chatbot_history');
+      if (historyHtml) {
+        els.messages.innerHTML = historyHtml;
+        scrollToBottom();
+      }
+    } catch (e) {
+      console.warn('[ia_chatbot] No se pudo cargar el historial de sessionStorage', e);
+    }
+  }
+
+  loadHistory();
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 4. CONTROL DEL PANEL (abrir / cerrar)
   // ═══════════════════════════════════════════════════════════════════════════
 
   function openPanel() {
@@ -304,6 +330,10 @@
     if (text) div.textContent = text;
     els.messages.appendChild(div);
     scrollToBottom();
+    // Guardamos si no es un mensaje bot en streaming (esos se guardan en finalizeStreaming)
+    if (role !== 'bot' || text !== '') {
+        saveHistory();
+    }
     return div;
   }
 
@@ -542,6 +572,7 @@
     state.cursorNode    = null;
     state.currentBotMsg = null;
     setStreaming(false);
+    saveHistory(); // Guardar el mensaje final del bot
     // Devolver foco al input
     els.input.focus();
   }

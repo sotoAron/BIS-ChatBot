@@ -32,8 +32,10 @@ from app.core.security import get_current_user
 from app.rag.embeddings import embed_text
 from app.rag.retriever import NO_CONTEXT_MESSAGE, Retriever, build_rag_prompt
 from app.rag.intent_router import IntentRouter, Intent
+from app.rag.query_rewriter import rewrite_query
 from app.rag.tools import ToolExecutor
 from app.services.cache import SemanticCache, _make_namespace
+from app.core.prompts import SYSTEM_PROMPT_BASE, GREETING_MESSAGE, ESCALATION_MESSAGE, CHITCHAT_MESSAGE, STATIC_NO_CONTEXT_MESSAGE
 from app.services.history import ConversationHistory
 from app.services.llm import OllamaClient, OllamaConnectionError, OllamaModelError
 from app.services.rate_limit import RateLimiter
@@ -42,15 +44,7 @@ from app.services.rate_limit import RateLimiter
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# ── System prompt base ────────────────────────────────────────────────────────
-SYSTEM_PROMPT = """Eres un asistente académico de la Facultad. Tu rol es ayudar a
-estudiantes y docentes con consultas sobre reglamentos, planes de estudio, fechas
-importantes y procedimientos académicos.
-
-Responde siempre en español, de forma clara y concisa.
-Si no conoces la respuesta con certeza, indícalo honestamente.
-Nunca inventes información sobre fechas, notas o reglamentos.
-Basa tus respuestas únicamente en el contexto académico proporcionado."""
+# System prompt base importado desde app.core.prompts
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -125,7 +119,32 @@ async def _stream_from_cache(response: str, timings: dict | None = None) -> Asyn
     yield _sse_done(timings=timings)
 
 
-async def _stream_no_context() -> AsyncGenerator[str, None]:
+async def _stream_static_message(
+    msg: str, 
+    is_no_context: bool = False,
+    history_manager: ConversationHistory | None = None,
+    user_id: int | None = None,
+    question: str | None = None
+) -> AsyncGenerator[str, None]:
+    """Simula streaming para respuestas estáticas (saludos, escalamiento, fallbacks)."""
+    chunk_size = 15
+    for i in range(0, len(msg), chunk_size):
+        yield _sse_chunk({"chunk": msg[i:i + chunk_size], "cached": False, "no_context": is_no_context})
+    yield _sse_done()
+    
+    if history_manager and user_id and question:
+        try:
+            await history_manager.add_turn(user_id, question, msg)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("Error guardando historial de mensaje estático: %s", e)
+
+
+async def _stream_no_context(
+    history_manager: ConversationHistory | None = None,
+    user_id: int | None = None,
+    question: str | None = None
+) -> AsyncGenerator[str, None]:
     """
     Cláusula anti-alucinación: respuesta directa sin invocar Ollama.
 
@@ -133,17 +152,8 @@ async def _stream_no_context() -> AsyncGenerator[str, None]:
     contexto (año + carrera) del usuario. Evita que el modelo responda
     con su conocimiento general en lugar de los documentos oficiales.
     """
-    msg = (
-        "No dispongo de información oficial sobre esa consulta en los reglamentos "
-        "y documentos cargados para tu carrera y año académico. "
-        "Te recomiendo consultar directamente con la secretaría académica "
-        "o revisar el portal oficial de la facultad."
-    )
-    # Simular streaming natural para no romper el contrato SSE del widget
-    chunk_size = 15
-    for i in range(0, len(msg), chunk_size):
-        yield _sse_chunk({"chunk": msg[i:i + chunk_size], "cached": False, "no_context": True})
-    yield _sse_done()
+    async for chunk in _stream_static_message(STATIC_NO_CONTEXT_MESSAGE, is_no_context=True, history_manager=history_manager, user_id=user_id, question=question):
+        yield chunk
 
 
 async def _stream_from_llm(
@@ -333,9 +343,48 @@ async def _chat_stream_handler(
             headers={"Retry-After": str(settings.rate_limit_window_seconds)},
         )
 
-    # ── 2. Intent Router (Mover antes de caché) ───────────────────────────────
+    # ── 1.5. Historial Conversacional y Reescritura de Consulta ────────────────
+    t_hist_start = time.perf_counter()
+    history_manager = ConversationHistory(request.app.state.redis)
+    history = await history_manager.get_history(user_id)
+    pipeline_timings["history_ms"] = round((time.perf_counter() - t_hist_start) * 1000, 2)
+    
+    # ── 2. Intent Router (Fast path O(1)) ───────────────────────────────
     t_intent_start = time.perf_counter()
     intent = IntentRouter.classify(question)
+
+    t_rewrite_start = time.perf_counter()
+    calendar_entities = {}
+    if intent is None:
+        # Si no es un atajo rápido, el LLM reescribe la query y clasifica la intención
+        contextualized_question, intent_str, calendar_entities = await rewrite_query(question, history)
+        try:
+            intent = Intent(intent_str)
+        except ValueError:
+            intent = Intent.RAG
+    else:
+        contextualized_question = question
+    pipeline_timings["rewrite_ms"] = round((time.perf_counter() - t_rewrite_start) * 1000, 2)
+
+    # ── Lógica de Auto-Escalamiento ───────────────────────────────────────────
+    consecutive_fallbacks = 0
+    if history:
+        for msg in reversed(history):
+            if msg["role"] == "assistant":
+                if STATIC_NO_CONTEXT_MESSAGE in msg["content"]:
+                    consecutive_fallbacks += 1
+                else:
+                    break
+    if consecutive_fallbacks >= 2:
+        intent = Intent.ESCALATION
+        logger.info("Auto-escalando a humano por fallbacks repetidos.")
+        
+    # ── Analytics de Intenciones ──────────────────────────────────────────────
+    try:
+        await request.app.state.redis.hincrby("analytics:intents", intent.value, 1)
+    except Exception as e:
+        logger.warning(f"Error guardando analytics: {e}")
+
     destination = IntentRouter.get_destination(intent)
     pipeline_timings["intent_ms"] = round((time.perf_counter() - t_intent_start) * 1000, 2)
     pipeline_timings["intent"] = intent.name
@@ -359,7 +408,8 @@ async def _chat_stream_handler(
             namespace=cache_ns,
         )
 
-        cached_response = await cache.get(question)
+        # Buscar en caché usando la pregunta contextualizada
+        cached_response = await cache.get(contextualized_question)
         pipeline_timings["cache_ms"] = round((time.perf_counter() - t_cache_start) * 1000, 2)
         if cached_response:
             pipeline_timings["cache_result"] = "HIT"
@@ -384,58 +434,22 @@ async def _chat_stream_handler(
         pipeline_timings["cache_ms"] = round((time.perf_counter() - t_cache_start) * 1000, 2)
         pipeline_timings["cache_result"] = "BYPASS"
 
-    # ── 4. Historial Conversacional ───────────────────────────────────────────
-    t_hist_start = time.perf_counter()
-    history_manager = ConversationHistory(request.app.state.redis)
-    history = await history_manager.get_history(user_id)
-    pipeline_timings["history_ms"] = round((time.perf_counter() - t_hist_start) * 1000, 2)
-    
+    # ── 4. Generación de Respuesta (LLM o Tools) ──────────────────────────────
     rag_docs: list = []
     vector_store = getattr(request.app.state, "vector_store", None)
     total_docs = vector_store.count() if vector_store else 0
 
     if intent == Intent.ASSIGNMENTS:
         tool_result = await ToolExecutor.get_pending_assignments(user_id)
-        rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[CONTEXTO DE TAREAS EN MOODLE]\n{tool_result}"
-        generator = _stream_from_llm(
-            question,
-            request.app.state.ollama,
-            cache,
-            system_prompt=rag_system_prompt,
-            history=history,
-            history_manager=history_manager,
-            user_id=user_id,
-            pipeline_timings=pipeline_timings,
-        )
+        generator = _stream_static_message(tool_result, history_manager=history_manager, user_id=user_id, question=question)
 
     elif intent == Intent.COURSES:
         tool_result = await ToolExecutor.get_my_courses(user_id)
-        rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[CONTEXTO DE CURSOS INSCRIPTOS]\n{tool_result}"
-        generator = _stream_from_llm(
-            question,
-            request.app.state.ollama,
-            cache,
-            system_prompt=rag_system_prompt,
-            history=history,
-            history_manager=history_manager,
-            user_id=user_id,
-            pipeline_timings=pipeline_timings,
-        )
+        generator = _stream_static_message(tool_result, history_manager=history_manager, user_id=user_id, question=question)
 
     elif intent == Intent.GRADES:
-        courses = await request.app.state.vector_store._client if False else []
-        tool_result = await ToolExecutor.get_my_grades(user_id, course_id=2)
-        rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[CONTEXTO DE CALIFICACIONES EN MOODLE]\n{tool_result}"
-        generator = _stream_from_llm(
-            question,
-            request.app.state.ollama,
-            cache,
-            system_prompt=rag_system_prompt,
-            history=history,
-            history_manager=history_manager,
-            user_id=user_id,
-            pipeline_timings=pipeline_timings,
-        )
+        tool_result = await ToolExecutor.get_my_grades(user_id)
+        generator = _stream_static_message(tool_result, history_manager=history_manager, user_id=user_id, question=question)
 
     elif intent == Intent.SYNC:
         tool_result = await ToolExecutor.sync_course_syllabus(
@@ -449,7 +463,7 @@ async def _chat_stream_handler(
             f"hacerte preguntas sobre los temas, fechas de exámenes o condiciones de la materia."
         )
         generator = _stream_from_llm(
-            question,
+            contextualized_question,
             request.app.state.ollama,
             cache,
             system_prompt=rag_system_prompt,
@@ -460,29 +474,59 @@ async def _chat_stream_handler(
         )
 
     elif intent == Intent.CALENDAR_WRITE:
-        if "confirm" not in question.lower() and "si" not in question.lower() and "sí" not in question.lower():
-            rag_system_prompt = (
-                f"{SYSTEM_PROMPT}\n\nEl usuario quiere agendar un evento, pero debes "
-                "pedirle confirmación explícita (ej. '¿Estás seguro que quieres agendar esto en tu calendario?'). "
-                "No uses la herramienta de escritura todavía."
-            )
+        materia = calendar_entities.get("materia")
+        fecha_str = calendar_entities.get("fecha")
+        titulo = calendar_entities.get("titulo")
+        
+        faltan = []
+        if not materia: faltan.append("la materia")
+        if not fecha_str: faltan.append("la fecha u hora")
+        if not titulo: faltan.append("el título de la entrega/evento")
+        
+        if faltan:
+            msg = f"¡Excelente! Para agendarlo, necesito que me indiques {', '.join(faltan)}."
+            generator = _stream_static_message(msg, history_manager=history_manager, user_id=user_id, question=question)
         else:
-            tool_result = await ToolExecutor.add_exam_to_calendar(
-                user_id=user_id, course_id=2, event_name="Examen Parcial", 
-                description="Agendado por el Chatbot Académico", timestamp=int(time.time() + 86400 * 7)
-            )
-            rag_system_prompt = f"{SYSTEM_PROMPT}\n\n[RESULTADO DE ESCRITURA EN CALENDARIO]\n{tool_result}"
+            from datetime import datetime
+            from zoneinfo import ZoneInfo
+            tz = ZoneInfo("America/Argentina/Buenos_Aires")
+            
+            try:
+                dt = datetime.strptime(fecha_str, "%Y-%m-%d %H:%M")
+                dt = dt.replace(tzinfo=tz)
+                timestamp = int(dt.timestamp())
+                
+                course_id = await ToolExecutor.resolve_course_id(user_id, materia)
+                if not course_id:
+                    msg = f"No pude encontrar la materia '{materia}' entre tus cursos inscriptos. ¿Podrías verificar el nombre?"
+                    generator = _stream_static_message(msg, history_manager=history_manager, user_id=user_id, question=question)
+                else:
+                    tool_result = await ToolExecutor.add_exam_to_calendar(
+                        user_id=user_id,
+                        course_id=course_id,
+                        event_name=titulo,
+                        description="Agendado por el Asistente Virtual UTN.",
+                        timestamp=timestamp
+                    )
+                    
+                    if "exitosamente" in tool_result:
+                        msg = f"Se ha agendado para el {dt.strftime('%d/%m/%y %H:%M')} '{titulo}' de la materia {materia}."
+                    else:
+                        msg = tool_result
+                        
+                    generator = _stream_static_message(msg, history_manager=history_manager, user_id=user_id, question=question)
+            except ValueError:
+                msg = f"No pude entender el formato de la fecha ({fecha_str}). ¿Podrías indicarme la fecha y hora exacta?"
+                generator = _stream_static_message(msg, history_manager=history_manager, user_id=user_id, question=question)
 
-        generator = _stream_from_llm(
-            question,
-            request.app.state.ollama,
-            cache,
-            system_prompt=rag_system_prompt,
-            history=history,
-            history_manager=history_manager,
-            user_id=user_id,
-            pipeline_timings=pipeline_timings,
-        )
+    elif intent == Intent.GREETING:
+        generator = _stream_static_message(GREETING_MESSAGE, history_manager=history_manager, user_id=user_id, question=question)
+
+    elif intent == Intent.ESCALATION:
+        generator = _stream_static_message(ESCALATION_MESSAGE, history_manager=history_manager, user_id=user_id, question=question)
+
+    elif intent == Intent.OOD:
+        generator = _stream_static_message(CHITCHAT_MESSAGE, history_manager=history_manager, user_id=user_id, question=question)
 
     else:
         # ── 5. RAG: recuperar contexto académico relevante (Fallback) ─────────
@@ -497,7 +541,7 @@ async def _chat_stream_handler(
                     vector_store=vector_store,
                     embedder=embed_text,
                     min_score=0.20,
-                    n_results=5,
+                    n_results=3,
                 )
                 
                 # Contextualizar la búsqueda RAG con la última pregunta del usuario (Short-term memory)
@@ -544,7 +588,11 @@ async def _chat_stream_handler(
                 "(0 docs, carrera='%s', año=%s). No se invoca Ollama.",
                 user_id, effective_car, effective_año,
             )
-            generator = _stream_no_context()
+            try:
+                await request.app.state.redis.hincrby("analytics:fallbacks", "rag_empty", 1)
+            except Exception:
+                pass
+            generator = _stream_no_context(history_manager=history_manager, user_id=user_id, question=question)
         else:
             generator = _stream_from_llm(
                 question,
@@ -612,3 +660,36 @@ async def chat_stream_get(
         año_academico=año_academico,
         carrera=carrera,
     )
+
+
+@router.get("/api/analytics", tags=["Analytics"])
+async def get_analytics(request: Request):
+    """
+    Endpoint para consultar métricas básicas de uso del chatbot.
+    """
+    redis = request.app.state.redis
+    try:
+        intents_raw = await redis.hgetall("analytics:intents")
+        fallbacks_raw = await redis.hgetall("analytics:fallbacks")
+        
+        intents = {k.decode("utf-8"): int(v) for k, v in intents_raw.items()}
+        fallbacks = {k.decode("utf-8"): int(v) for k, v in fallbacks_raw.items()}
+        
+        total_queries = sum(intents.values())
+        total_fallbacks = sum(fallbacks.values())
+        
+        fallback_rate = (total_fallbacks / total_queries * 100) if total_queries > 0 else 0.0
+
+        return {
+            "status": "success",
+            "metrics": {
+                "total_queries": total_queries,
+                "intent_distribution": intents,
+                "total_fallbacks": total_fallbacks,
+                "fallback_reasons": fallbacks,
+                "fallback_rate_percentage": round(fallback_rate, 2),
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error reading analytics: {e}")
+        raise HTTPException(status_code=500, detail="Error al consultar analytics.")

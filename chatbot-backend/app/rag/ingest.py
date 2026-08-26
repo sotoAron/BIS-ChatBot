@@ -42,8 +42,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ChunkingConfig:
     """Configuración del pipeline de chunking."""
-    chunk_size: int    = 512    # Tamaño máximo de un chunk en caracteres
-    chunk_overlap: int = 64     # Solapamiento con el chunk anterior en caracteres
+    chunk_size: int    = 1500   # Aumentado a 1500 para contener tablas completas (ej: Profesores)
+    chunk_overlap: int = 256    # Solapamiento con el chunk anterior en caracteres
     min_chunk_length: int = 40  # Longitud mínima para que un chunk sea válido
 
 
@@ -241,28 +241,14 @@ def make_chunk_id(source: str, año: str, carrera: str, index: int) -> str:
 _MD_HEADER_RE = re.compile(r"^(#{1,6})\s+(.+)", re.MULTILINE)
 
 # Parámetros del chunker jerárquico Markdown
-_MD_MAX_CHARS   = 3000   # Aumentado para evitar cortar tablas Markdown
-_MD_OVERLAP     = 300    # Solapamiento aproximado en caracteres
+_MD_MAX_CHARS   = 1500   # Optimizado para inferencia en CPU (3B models)
+_MD_OVERLAP     = 250    # Solapamiento aproximado en caracteres
 _MD_MIN_LENGTH  = 50     # Longitud mínima de un chunk
 
 
 def chunk_markdown_text(md_text: str) -> list[str]:
     """
-    Divisor jerárquico por encabezados Markdown.
-
-    ESTRATEGIA:
-      1. Identifica los encabezados (# … ######) como delimitadores de sección.
-      2. Acumula el texto bajo cada encabezado como un bloque.
-      3. Inyecta el título de la sección al inicio de cada chunk (para no
-         perder el contexto del bloque en preguntas de recuperación).
-      4. Si un bloque supera _MD_MAX_CHARS (1500 chars), lo re-divide
-         con solapamiento de _MD_OVERLAP (250 chars) respetando oraciones.
-
-    Args:
-        md_text: Texto completo en formato Markdown (salida de pymupdf4llm).
-
-    Returns:
-        Lista de strings — cada uno es un chunk con contexto de sección.
+    Divisor jerárquico por encabezados Markdown con Table-Awareness.
     """
     md_text = _normalize_whitespace(md_text)
     lines = md_text.split("\n")
@@ -275,15 +261,13 @@ def chunk_markdown_text(md_text: str) -> list[str]:
     for line in lines:
         m = _MD_HEADER_RE.match(line)
         if m:
-            # Cerrar el bloque anterior
             if current_lines:
                 sections.append((current_heading, "\n".join(current_lines).strip()))
-            current_heading = line.strip()   # e.g. "## Cronograma"
+            current_heading = line.strip()   
             current_lines = []
         else:
             current_lines.append(line)
 
-    # Cerrar el último bloque
     if current_lines:
         sections.append((current_heading, "\n".join(current_lines).strip()))
 
@@ -293,7 +277,6 @@ def chunk_markdown_text(md_text: str) -> list[str]:
         if not body.strip():
             continue
 
-        # Prefijo de contexto: inyectar el encabezado al inicio del chunk
         prefix = f"{heading}\n" if heading else ""
         full_block = f"{prefix}{body}"
 
@@ -301,8 +284,7 @@ def chunk_markdown_text(md_text: str) -> list[str]:
             if len(full_block) >= _MD_MIN_LENGTH:
                 chunks.append(full_block)
         else:
-            # Re-dividir bloques largos (ej. tablas con muchas filas)
-            sub_chunks = _split_long_block(full_block, prefix)
+            sub_chunks = _split_long_block(body, prefix)
             chunks.extend(sub_chunks)
 
     return chunks
@@ -310,22 +292,34 @@ def chunk_markdown_text(md_text: str) -> list[str]:
 
 def _split_long_block(text: str, section_prefix: str) -> list[str]:
     """
-    Divide un bloque largo en sub-chunks de tamaño <= _MD_MAX_CHARS,
-    dividiendo por líneas (\n) para no romper la sintaxis Markdown de las tablas.
-    Inyecta section_prefix al inicio de cada sub-chunk.
+    Divide un bloque largo en sub-chunks de tamaño <= _MD_MAX_CHARS.
+    TABLE-AWARE: Si detecta un encabezado de tabla Markdown, lo inyecta 
+    en cada sub-chunk para que el LLM no pierda el contexto de las columnas.
     """
     lines = text.split("\n")
     sub_chunks: list[str] = []
+    
+    # Buscar el encabezado de la tabla Markdown en este bloque
+    table_header = []
+    for i in range(len(lines) - 1):
+        if lines[i].strip().startswith("|") and re.match(r"^\|[\s\-:|]+\|$", lines[i+1].strip()):
+            table_header = [lines[i], lines[i+1]]
+            break
+            
     current_parts: list[str] = []
     current_len = len(section_prefix)
 
     for line in lines:
         if current_len + len(line) + 1 > _MD_MAX_CHARS and current_parts:
-            chunk = section_prefix + "\n".join(current_parts)
-            if len(chunk) >= _MD_MIN_LENGTH:
+            content_str = "\n".join(current_parts).strip()
+            if len(content_str) > 30:  # Validar que haya contenido real
+                parts_to_join = current_parts.copy()
+                if table_header and table_header[0] not in parts_to_join:
+                    parts_to_join = table_header + parts_to_join
+                    
+                chunk = section_prefix + "\n".join(parts_to_join)
                 sub_chunks.append(chunk)
             
-            # Solapamiento: conservar las últimas 3 líneas
             overlap_lines = current_parts[-3:] if len(current_parts) >= 3 else current_parts
             current_parts = overlap_lines
             current_len = len(section_prefix) + sum(len(l) + 1 for l in current_parts)
@@ -333,11 +327,13 @@ def _split_long_block(text: str, section_prefix: str) -> list[str]:
         current_parts.append(line)
         current_len += len(line) + 1
 
-    # Último bloque residual
     if current_parts:
-        chunk = section_prefix + "\n".join(current_parts)
-        # Solo agregar si tiene contenido real más allá del prefix y overlap
-        if len(chunk) > len(section_prefix) + 20:
+        content_str = "\n".join(current_parts).strip()
+        if len(content_str) > 30:
+            parts_to_join = current_parts.copy()
+            if table_header and table_header[0] not in parts_to_join:
+                parts_to_join = table_header + parts_to_join
+            chunk = section_prefix + "\n".join(parts_to_join)
             sub_chunks.append(chunk)
 
     return sub_chunks
@@ -426,7 +422,7 @@ class DocumentChunker:
         metadatas = [metadata.to_chunk_meta(i, total) for i in range(total)]
 
         # 5. Indexar (batch para eficiencia)
-        self._store.add(
+        self._store.upsert(
             documents=chunks,
             embeddings=processed_embeddings,
             metadatas=metadatas,

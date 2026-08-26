@@ -58,8 +58,7 @@ class MoodleClient:
 
     async def get_course_assignments(self, course_id: Optional[int] = None) -> dict[str, Any]:
         """
-        Retorna las tareas. Si course_id es proveído, filtra por curso.
-        Moodle wsfunction: mod_assign_get_assignments
+        Retorna las tareas usando mod_assign_get_assignments.
         """
         if not self._token:
             return {}
@@ -69,6 +68,21 @@ class MoodleClient:
             params["courseids[0]"] = course_id
             
         return await self._call("mod_assign_get_assignments", params)
+
+    async def get_calendar_events(self) -> dict[str, Any]:
+        """
+        Retorna las tareas pendientes (action events) ordenadas por fecha para el usuario actual.
+        Moodle wsfunction: core_calendar_get_action_events_by_timesort
+        """
+        if not self._token:
+            return {}
+            
+        import time
+        params = {
+            "timesortfrom": int(time.time()),  # Desde ahora
+            "limitnum": 20  # Límite razonable
+        }
+        return await self._call("core_calendar_get_action_events_by_timesort", params)
 
     async def get_user_grades(self, user_id: int, course_id: int) -> dict[str, Any]:
         """

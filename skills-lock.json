@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "chatbot-flow-design": {
+      "source": "rampstackco/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/chatbot-flow-design/SKILL.md",
+      "computedHash": "bfc0da0046ed68ab45fcd675db9e51360b8558f50b7915af6d56f32da43a463b"
+    }
+  }
+}

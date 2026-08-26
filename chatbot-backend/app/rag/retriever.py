@@ -24,74 +24,12 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from app.core.prompts import NO_CONTEXT_MESSAGE
+
 logger = logging.getLogger(__name__)
-
-# ── Constante de sistema — mensaje cuando no hay contexto RAG ─────────────────
-NO_CONTEXT_MESSAGE = (
-    "No tengo información específica sobre esto en los documentos académicos disponibles. "
-    "Te recomiendo consultar directamente con la secretaría académica o revisar el portal "
-    "oficial de la facultad."
-)
-
 # Límite máximo de caracteres de contexto para no saturar la ventana del LLM
-# Qwen 2.5 3B: ~4096 tokens ≈ 16000 caracteres
-# Reducido a 3000 para optimizar drásticamente la latencia de evaluación en CPU
-MAX_CONTEXT_CHARS = 6000
-
-# ── Diccionario de sinónimos para expansión de consulta ───────────────────────
-# Inyectados ANTES de vectorizar la query para aumentar el recall semántico.
-# Formato: "término_en_query" → lista de términos a concatenar a la query.
-SYNONYM_MAP: dict[str, list[str]] = {
-    "parcial":       ["examen", "evaluación", "prueba"],
-    "parciales":     ["exámenes", "evaluaciones", "pruebas"],
-    "examen":        ["parcial", "evaluación"],
-    "nota":          ["calificación", "resultado"],
-    "notas":         ["calificaciones", "resultados"],
-    "fecha":         ["cronograma", "calendario", "cuando"],
-    "cronograma":    ["fecha", "calendario", "planificación", "schedule"],
-    "vencimiento":   ["fecha límite", "entrega", "due date"],
-    "trabajo":       ["tp", "trabajo práctico", "entrega"],
-    "aprobar":       ["acreditar", "promocionar", "regularizar"],
-    "condición":     ["requisito", "reglamento", "criterio"],
-    "aacsw":         ["Aspectos Avanzados de Calidad de Software"],
-}
-
-
-def expand_query(query: str) -> str:
-    """
-    Expande la consulta del usuario inyectando sinónimos antes de vectorizar.
-
-    Si la query contiene una palabra clave del SYNONYM_MAP, concatena sus
-    equivalentes semánticos al texto. Esto mejora el recall en ChromaDB
-    sin necesidad de re-entrenar el modelo de embeddings.
-
-    Ejemplo:
-        "¿Cuándo es el parcial?" → "¿Cuándo es el parcial? examen evaluación prueba"
-
-    Args:
-        query: Pregunta original del usuario.
-
-    Returns:
-        Query enriquecida con sinónimos relevantes.
-    """
-    query_lower = query.lower()
-    additions: list[str] = []
-
-    for keyword, synonyms in SYNONYM_MAP.items():
-        # Buscar la keyword como palabra completa (no como subpalabra)
-        pattern = rf"\b{re.escape(keyword)}\b"
-        if re.search(pattern, query_lower):
-            additions.extend(synonyms)
-
-    if additions:
-        # Deduplicar y agregar al final de la query
-        unique_additions = list(dict.fromkeys(additions))
-        expanded = query.rstrip() + " " + " ".join(unique_additions)
-        logger.debug("Query expandida: '%s' → '%s'", query[:60], expanded[:80])
-        return expanded
-
-    return query
-
+# Ajustado a 4000 tras aumentar el chunk_size a 1500 (3 chunks = 4500 chars max)
+MAX_CONTEXT_CHARS = 4000
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -116,14 +54,7 @@ def build_rag_prompt(docs: list[dict[str, Any]], base_system_prompt: str = "") -
     base = base_system_prompt or (
         "Eres un asistente académico de la Facultad. Responde siempre en español, "
         "de forma clara y concisa. Basa tus respuestas ÚNICAMENTE en el contexto "
-        "académico proporcionado a continuación.\n"
-        "VOCABULARIO: Trata 'parcial', 'examen' y 'evaluación' como sinónimos absolutos. "
-        "Cuando el contexto mencione 'examen' y el usuario pregunte por 'parcial' (o viceversa), "
-        "interprétalos como el mismo concepto. "
-        "Adicionalmente, ten en cuenta que siglas como 'aacsw' o 'AACSW' se refieren a la asignatura 'Aspectos Avanzados de Calidad de Software'.\n"
-        "INSTRUCCIÓN IMPORTANTE: Los datos en las tablas (formato Markdown) aplican a la materia del documento. "
-        "Si te preguntan por la carga horaria, nivel o ciclo de AACSW, extrae el valor directamente de la fila correspondiente (ej: '|Carga Horaria Total|...|'), "
-        "asumiendo que pertenece a la asignatura, aunque la sigla no aparezca en esa fila exacta."
+        "académico proporcionado a continuación."
     )
 
     if not docs:
@@ -207,7 +138,7 @@ class Retriever:
         vector_store,
         embedder: Callable,
         min_score: float = 0.40,   # Bajado de 0.70: distancias coseno reales son altas
-        n_results: int = 5,
+        n_results: int = 3,
         base_system_prompt: str = "",
     ) -> None:
         self._store        = vector_store
@@ -237,17 +168,13 @@ class Retriever:
             Lista de documentos filtrados por similitud ≥ min_score.
             Lista vacía si no hay resultados relevantes.
         """
-        # 0. Expansión de consulta con sinónimos (mejora recall sin re-entrenar)
-        expanded_query = expand_query(query)
-
-        # 1. Embedding de la query (expandida)
-        embedding = await self._embed(expanded_query)
+        # 1. Embedding de la query original
+        embedding = await self._embed(query)
         embedding_list = embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
 
         # 2. Filtro obligatorio de metadatos (solo añade si tienen valor)
         where_filter = {}
         
-        # En ChromaDB, múltiples condiciones requieren $and si hay más de una.
         # Simplificación: si pasamos un dict con varias claves, ChromaDB hace un AND implícito.
         if año_academico:
             where_filter["año_academico"] = año_academico
@@ -258,61 +185,82 @@ class Retriever:
         if not where_filter:
             where_filter = None
 
-        # 3. Consulta al vector store
+        # 3. Consulta al vector store (recuperamos un pool amplio para Rank Fusion)
         raw_results = self._store.query(
             query_embedding=embedding_list,
-            n_results=self._n_results,
+            n_results=100, # Universo amplio de la cohorte
             where=where_filter,
         )
 
-        # 3.5. Ensure chunk_index=0 is always considered for administrative context
-        chunk_0_filter = dict(where_filter) if where_filter else {}
-        chunk_0_filter["chunk_index"] = 0
-        chunk_0_results = self._store.get(where=chunk_0_filter)
+        if not raw_results:
+            return []
             
-        if chunk_0_results and chunk_0_results.get("documents"):
-            # If we have chunk 0, artificially prepend it with a perfect score if not already present
-            has_chunk_0 = False
-            for doc in raw_results:
-                if doc.get("metadata", {}).get("chunk_index") == 0:
-                    has_chunk_0 = True
-                    break
-            
-            if not has_chunk_0:
-                # Construct a raw result dict for chunk 0
-                chunk_0_doc = {
-                    "document": chunk_0_results["documents"][0],
-                    "metadata": chunk_0_results["metadatas"][0],
-                    "distance": 0.0, # force highest score
-                }
-                raw_results.insert(0, chunk_0_doc)
-
-        # 4. Filtrar por umbral mínimo de similitud
-        # ChromaDB con hnsw:space=cosine devuelve DISTANCIAS en [0, 2]:
-        #   distancia 0.0 = vectores idénticos
-        #   distancia 1.0 = vectores ortogonales (sin relación)
-        #   distancia 2.0 = vectores opuestos
-        # Conversión: score = 1.0 - distance  → rango [-1.0, 1.0]
-        # Para embeddings normalizados (paraphrase-multilingual), las distancias
-        # de documentos relevantes suelen caer en [0.30, 0.65] → score [0.35, 0.70]
-        filtered = []
+        docs_formatted = []
+        chunk_0_doc = None
         for doc in raw_results:
             distance = doc.get("distance", 1.0)
-            score    = round(1.0 - distance, 4)
-            logger.debug(
-                "RAG candidate: score=%.4f (distance=%.4f) | source='%s' | text='%s…'",
-                score, distance,
-                doc.get("metadata", {}).get("source", "?"),
-                doc.get("document", "")[:60],
-            )
-            if score >= self._min_score:
-                filtered.append({**doc, "score": score})
+            score = round(1.0 - distance, 4)
+            d = {
+                "document": doc.get("document", ""),
+                "metadata": doc.get("metadata", {}),
+                "dense_score": score,
+            }
+            docs_formatted.append(d)
+            if d["metadata"].get("chunk_index") == 0:
+                chunk_0_doc = d
+            
+        # Filtrar candidatos iniciales muy malos (score < 0.15), excluyendo a chunk 0
+        docs_formatted = [d for d in docs_formatted if d["dense_score"] > 0.15 or d is chunk_0_doc]
+        
+        if not docs_formatted:
+            return []
+
+        # 4. Búsqueda Lexical BM25 (Hybrid Search)
+        from app.rag.bm25 import BM25Retriever
+        bm25_docs = [{"page_content": d["document"]} for d in docs_formatted]
+        bm25_retriever = BM25Retriever(bm25_docs)
+        bm25_scores = bm25_retriever.get_scores(query)
+
+        for i, doc in enumerate(docs_formatted):
+            doc["bm25_score"] = bm25_scores[i]
+
+        # 5. Reciprocal Rank Fusion (RRF)
+        docs_formatted.sort(key=lambda x: x["dense_score"], reverse=True)
+        for rank, doc in enumerate(docs_formatted):
+            doc["dense_rank"] = rank + 1
+            
+        docs_formatted.sort(key=lambda x: x["bm25_score"], reverse=True)
+        for rank, doc in enumerate(docs_formatted):
+            doc["bm25_rank"] = rank + 1
+
+        k = 60
+        for doc in docs_formatted:
+            # Formula RRF estándar
+            doc["rrf_score"] = (1.0 / (k + doc["dense_rank"])) + (1.0 / (k + doc["bm25_rank"]))
+
+        # 6. Ordenar por RRF final y seleccionar los top N
+        docs_formatted.sort(key=lambda x: x["rrf_score"], reverse=True)
+        
+        # 7. Asegurar que el chunk_index = 0 esté siempre presente si existe en el cohorte
+        # (El chunk 0 suele contener los metadatos de docentes y carga horaria)
+        top_results = docs_formatted[:self._n_results]
+        
+        if chunk_0_doc and chunk_0_doc not in top_results:
+            # Si no entró en el top N pero existe, lo forzamos al principio
+            top_results.insert(0, chunk_0_doc)
+            top_results = top_results[:self._n_results] # Mantener el tamaño de n_results
+
+        filtered = []
+        for doc in top_results:
+            # Guardamos el score original y el rrf_score para compatibilidad
+            doc["score"] = round(doc["rrf_score"], 4)
+            filtered.append(doc)
 
         logger.info(
-            "RAG retrieve: query='%s…' año=%s carrera='%s' → %d/%d docs sobre umbral %.2f | "
-            "scores: [%s]",
-            query[:40], año_academico, carrera, len(filtered), len(raw_results), self._min_score,
-            ", ".join(f"{d.get('score', 0):.3f}" for d in filtered) or "ninguno",
+            "RAG Hybrid retrieve: query='%s…' año=%s carrera='%s' → %d docs recuperados | "
+            "RRF scores: [%s]",
+            query[:40], año_academico, carrera, len(filtered),
+            ", ".join(f"{d.get('score', 0):.4f}" for d in filtered) or "ninguno",
         )
 
         return filtered

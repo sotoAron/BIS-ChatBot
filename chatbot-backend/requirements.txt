@@ -16,6 +16,7 @@ chromadb==0.5.3
 
 # ── Embeddings (CPU-only — $0 infraestructura) ───────────────────────────────
 sentence-transformers==3.0.1
+optimum[onnxruntime]==1.21.0
 # torch y transformers se instalan vía --index-url CPU wheel en el Dockerfile
 
 # ── PDF / DOCX / TXT parsing (Fase 3+4 — pymupdf para tablas MD) ─────────────
