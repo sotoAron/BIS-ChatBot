@@ -10,7 +10,7 @@ from typing import Any, Optional
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.rag.moodle_sync import sync_course_pdf
+from app.rag.moodle_sync import sync_all_course_documents
 from app.services.moodle_client import get_moodle_client
 
 logger = logging.getLogger(__name__)
@@ -81,11 +81,16 @@ class ToolExecutor:
             result_set = set()
             tz = ZoneInfo("America/Argentina/Buenos_Aires")
             
+            import time
+            now = time.time()
+
             # Procesar eventos de calendario
             for event in events:
                 e_name = event.get("name", "Evento")
                 c_name = event.get("course", {}).get("fullname", "General")
                 due = event.get("timestart", 0)
+                if due > 0 and due < now:
+                    continue
                 due_date = datetime.fromtimestamp(due, tz=tz).strftime('%Y-%m-%d %H:%M') if due else "Sin fecha"
                 result_set.add(f"- {c_name}: {e_name} (Fecha: {due_date})")
                 
@@ -95,6 +100,8 @@ class ToolExecutor:
                 for assign in course.get("assignments", []):
                     a_name = assign.get("name", "Tarea")
                     due = assign.get("duedate", 0)
+                    if due > 0 and due < now:
+                        continue
                     due_date = datetime.fromtimestamp(due, tz=tz).strftime('%Y-%m-%d %H:%M') if due else "Sin fecha"
                     result_set.add(f"- {c_name}: {a_name} (Fecha: {due_date})")
             
@@ -148,36 +155,17 @@ class ToolExecutor:
             return "Ocurrió un error al consultar las calificaciones en Moodle."
 
     @classmethod
-    async def sync_course_syllabus(cls, course_id: int, año: str, carrera: str) -> str:
-        """Busca el PDF de planificación del curso y lo sincroniza con ChromaDB."""
-        client = get_moodle_client()
+    async def sync_all_course_documents(cls, course_id: int, año: str, carrera: str) -> str:
+        """Busca documentos en las secciones del curso y los sincroniza con ChromaDB."""
         try:
-            contents = await client.get_course_contents(course_id)
-            pdf_url = None
-            pdf_name = None
-            
-            # Buscar el primer archivo PDF en los recursos del curso
-            for section in contents:
-                for module in section.get("modules", []):
-                    if module.get("modname") == "resource":
-                        for content in module.get("contents", []):
-                            if content.get("mimetype") == "application/pdf":
-                                pdf_url = content.get("fileurl")
-                                pdf_name = content.get("filename", "documento.pdf")
-                                break
-                    if pdf_url:
-                        break
-                if pdf_url:
-                    break
-                    
-            if not pdf_url:
-                return "No se encontró ningún PDF de planificación en los recursos del curso."
+            stats = await sync_all_course_documents(course_id, año, carrera)
+            if stats["archivos_procesados"] == 0:
+                return "No se encontraron documentos válidos para sincronizar en los recursos del curso."
                 
-            chunks = await sync_course_pdf(course_id, pdf_url, pdf_name, año, carrera)
-            return f"Sincronización exitosa: se indexaron {chunks} fragmentos del archivo {pdf_name}."
+            return f"Sincronización exitosa: se procesaron {stats['archivos_procesados']} documentos y se generaron {stats['chunks_indexados']} fragmentos indexados."
         except Exception as e:
-            logger.error("Tool Error (sync_course_syllabus): %s", e)
-            return "Ocurrió un error al intentar sincronizar el PDF desde Moodle."
+            logger.error("Tool Error (sync_all_course_documents): %s", e)
+            return "Ocurrió un error al intentar sincronizar los documentos desde Moodle."
 
     @classmethod
     async def add_exam_to_calendar(

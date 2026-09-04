@@ -23,6 +23,7 @@ $capabilities = [
         'captype'      => 'read',           // Solo lectura — nunca escribe en la BD de Moodle.
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes'   => [
+            'user'           => CAP_ALLOW,
             'student'        => CAP_ALLOW,
             'teacher'        => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,

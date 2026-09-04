@@ -17,6 +17,7 @@ FLUJO DE /api/chat/stream:
   6. Streaming con Ollama Qwen 2.5 3B token a token
   7. Almacenar respuesta completa en caché semántica
 """
+import asyncio
 import json
 import logging
 import time
@@ -124,12 +125,19 @@ async def _stream_static_message(
     is_no_context: bool = False,
     history_manager: ConversationHistory | None = None,
     user_id: int | None = None,
-    question: str | None = None
+    question: str | None = None,
+    initial_delay: float = 0.0
 ) -> AsyncGenerator[str, None]:
     """Simula streaming para respuestas estáticas (saludos, escalamiento, fallbacks)."""
-    chunk_size = 15
+    import asyncio
+    if initial_delay > 0:
+        await asyncio.sleep(initial_delay)
+        
+    chunk_size = 3
     for i in range(0, len(msg), chunk_size):
         yield _sse_chunk({"chunk": msg[i:i + chunk_size], "cached": False, "no_context": is_no_context})
+        await asyncio.sleep(0.015)
+        
     yield _sse_done()
     
     if history_manager and user_id and question:
@@ -240,6 +248,16 @@ async def _stream_from_llm(
     except OllamaModelError as exc:
         logger.error("Error en el modelo Ollama: %s", exc)
         yield _sse_error("Error interno del modelo de IA.", 500)
+    except asyncio.CancelledError:
+        logger.info("Cliente desconectado prematuramente. Guardando historial parcial...")
+        complete = "".join(full_response)
+        if history_manager and user_id and complete:
+            try:
+                await history_manager.add_turn(user_id, question, complete)
+            except Exception as e:
+                logger.warning("Error guardando historial parcial: %s", e)
+        # Re-levantar para que FastAPI cierre la conexión
+        raise
     except Exception as exc:
         logger.exception("Error inesperado en streaming LLM: %s", exc)
         yield _sse_error("Error interno del servidor.", 500)
@@ -375,7 +393,7 @@ async def _chat_stream_handler(
                     consecutive_fallbacks += 1
                 else:
                     break
-    if consecutive_fallbacks >= 2:
+    if consecutive_fallbacks >= 2 and intent in (Intent.RAG, Intent.OOD, Intent.EXAMS):
         intent = Intent.ESCALATION
         logger.info("Auto-escalando a humano por fallbacks repetidos.")
         
@@ -394,11 +412,21 @@ async def _chat_stream_handler(
     # ── 3. Caché Semántica (Solo para RAG/preguntas generales) ────────────────
     t_cache_start = time.perf_counter()
     cache = None
-    if intent == Intent.RAG:
+    detected_materia_id = None
+
+    if intent in (Intent.RAG, Intent.EXAMS):
+        from app.rag.catalog import get_catalog as _get_catalog
+        _catalog = _get_catalog()
+        found_materias = _catalog.find_materias_in_text(contextualized_question)
+        if found_materias:
+            detected_materia_id = found_materias[0]
+            logger.info("Materia detectada para cache/filtro: %s", detected_materia_id)
+
         cache_ns = _make_namespace(
             año_academico=effective_año,
             carrera=effective_car,
             role=user_payload.get("role", "student"),
+            materia_id=detected_materia_id,
         )
         cache = SemanticCache(
             redis_client=request.app.state.redis,
@@ -452,7 +480,7 @@ async def _chat_stream_handler(
         generator = _stream_static_message(tool_result, history_manager=history_manager, user_id=user_id, question=question)
 
     elif intent == Intent.SYNC:
-        tool_result = await ToolExecutor.sync_course_syllabus(
+        tool_result = await ToolExecutor.sync_all_course_documents(
             course_id=2, año=effective_año, carrera=effective_car
         )
         rag_system_prompt = (
@@ -529,7 +557,7 @@ async def _chat_stream_handler(
         generator = _stream_static_message(CHITCHAT_MESSAGE, history_manager=history_manager, user_id=user_id, question=question)
 
     else:
-        # ── 5. RAG: recuperar contexto académico relevante (Fallback) ─────────
+        # ── 5. RAG: recuperar contexto académico relevante (RAG / EXAMS fallback) ─
         t_rag_start = time.perf_counter()
         vector_store      = getattr(request.app.state, "vector_store", None)
         total_docs        = vector_store.count() if vector_store else 0
@@ -537,11 +565,16 @@ async def _chat_stream_handler(
 
         if vector_store is not None and total_docs > 0:
             try:
+                # Para consultas de exámenes ampliamos el presupuesto de contexto
+                is_exams = (intent == Intent.EXAMS)
+                n_res = 10 if is_exams else 4
+                max_chars = 12000 if is_exams else 3500
                 retriever = Retriever(
                     vector_store=vector_store,
                     embedder=embed_text,
                     min_score=0.20,
-                    n_results=3,
+                    n_results=n_res,
+                    max_context_chars=max_chars,
                 )
                 
                 # Contextualizar la búsqueda RAG con la última pregunta del usuario (Short-term memory)
@@ -551,11 +584,23 @@ async def _chat_stream_handler(
                     if last_user_msg:
                         search_query = f"{last_user_msg}. {question}"
 
+                # Query Expansion para Exámenes (las planificaciones usan "Evaluación Formativa" o "Cronograma")
+                if intent == Intent.EXAMS:
+                    search_query = f"cronograma evaluaciones formativas calendario parciales {search_query}"
+
+                # Hard-filter by sections that could contain the exam dates to prevent
+                # large unrelated sections (like sistema_acreditacion) from exhausting the context window.
+                target_sections = ["cronograma", "documento_completo", "general"] if is_exams else None
+                
                 rag_result = await retriever.retrieve_with_prompt(
                     query=search_query,
                     año_academico=effective_año,
                     carrera=effective_car,
+                    is_exams=is_exams,
+                    secciones=target_sections,
+                    materia_id=detected_materia_id,
                 )
+
                 rag_docs = rag_result.docs
                 chunk_indices = [doc.get("metadata", {}).get("chunk_index") for doc in rag_docs]
                 pipeline_timings["rag_ms"] = round((time.perf_counter() - t_rag_start) * 1000, 2)

@@ -23,13 +23,15 @@ def get_rewrite_system_prompt() -> str:
         "Tu tarea es doble:\n"
         "1. Reescribir la consulta del usuario para que sea independiente y autocontenida, resolviendo pronombres y referencias usando el historial. "
         "REGLA CRÍTICA: Si el usuario cambia de tema, NO le heredes la intención de mensajes anteriores. Usa el historial SOLO para desambiguar pronombres o recuperar nombres de materias.\n"
+        "REGLA CRÍTICA 2: Si el usuario menciona 'unidad', 'módulo', 'tp', 'clase', 'recuperatorio' o pregunta por 'temas', ES OBLIGATORIO inyectar en la consulta el nombre de la materia de la que se estaba hablando en el historial (ej: 'cuándo se da la unidad 5 de AACSW?').\n"
         "2. Clasificar la intención de la consulta en una de las siguientes categorías:\n"
         "   - CALENDAR_WRITE: SOLO si el usuario EXPLÍCITAMENTE pide 'agendar', 'anotar', o 'agregar' al calendario. No aplica si solo pregunta fechas.\n"
         "   - GRADES: Si el usuario pregunta por sus notas, calificaciones o promedio.\n"
         "   - ASSIGNMENTS: Si el usuario pregunta por sus tareas, entregas pendientes o vencimientos.\n"
-        "   - COURSES: SOLO si el usuario pregunta en qué materias o cursos está inscripto.\n"
+        "   - COURSES: ÚNICAMENTE si el usuario pregunta '¿en qué materias estoy inscripto?' o '¿cuáles son mis cursos?'. Si el usuario pregunta por 'unidades', 'módulos', 'temas' o fechas de clases, ES RAG, NUNCA COURSES.\n"
         "   - OOD: Si la pregunta NO ES ACADÉMICA (chistes, clima, deportes, política, recetas, etc.) o está completamente fuera de dominio.\n"
-        "   - RAG: Cualquier otra consulta académica sobre reglamentos, fechas de exámenes, nombres de profesores, o dudas de cursada.\n\n"
+        "   - EXAMS: Si el usuario pregunta por fechas de exámenes, parciales o evaluaciones de una materia.\n"
+        "   - RAG: Cualquier otra consulta académica sobre reglamentos, plan de estudio, nivel de la materia, programa de la materia, contenidos, o nombres de profesores.\n\n"
         "SINÓNIMOS Y REGLAS:\n"
         "- 'parcial' = examen sumativo/formativo\n"
         "- 'regularizar' = aprobacion de cursada\n"
@@ -44,7 +46,7 @@ def get_rewrite_system_prompt() -> str:
         "Salida: {\"rewritten_query\": \"¿En qué materias estoy inscripto?\", \"intent\": \"COURSES\"}\n\n"
         "Historial: Assistant: \"¿Quieres que agende una entrega para mañana?\"\n"
         "Usuario: \"cuando son los examenes??\"\n"
-        "Salida: {\"rewritten_query\": \"¿Cuándo son los exámenes?\", \"intent\": \"RAG\"}\n\n"
+        "Salida: {\"rewritten_query\": \"¿Cuándo son los exámenes? Evaluación Sumativa Formativa\", \"intent\": \"EXAMS\"}\n\n"
         "Usuario: \"que profesores estan en aacsw??\"\n"
         "Salida: {\"rewritten_query\": \"¿Qué profesores están en la materia AACSW?\", \"intent\": \"RAG\"}\n\n"
         "Historial: Assistant: \"¿Quieres que agende una entrega para mañana?\"\n"
@@ -100,9 +102,28 @@ async def rewrite_query(current_query: str, history: List[Dict[str, str]]) -> tu
         intent = data.get("intent", "RAG").upper()
         calendar_entities = data.get("calendar_entities", {})
         
-        valid_intents = ["CALENDAR_WRITE", "GRADES", "ASSIGNMENTS", "COURSES", "OOD", "RAG"]
+        valid_intents = ["CALENDAR_WRITE", "GRADES", "ASSIGNMENTS", "COURSES", "OOD", "RAG", "EXAMS"]
         if intent not in valid_intents:
             intent = "RAG"
+            
+        # Post-procesamiento determinista para corregir errores del LLM pequeño
+        programa_keywords = ["programa", "contenido", "unidad", "temario", "syllabus", "planificación", "modulo", "módulo", "tema", "clase"]
+        if intent == "COURSES" and any(kw in rewritten.lower() for kw in programa_keywords):
+            intent = "RAG"
+
+        # Normalizar acrónimos conocidos para matching semántico y léxico
+        rewritten = re.sub(r'\baacsw\b', 'Aspectos Avanzados de Calidad de Software', rewritten, flags=re.IGNORECASE)
+
+        # Refuerzo determinista para búsquedas BM25/Vectorial de exámenes
+        if intent == "EXAMS":
+            if "sumativa" not in rewritten.lower() and "formativa" not in rewritten.lower():
+                rewritten = f"{rewritten} Cronograma Evaluación Sumativa Evaluación Formativa Coloquio Recuperatorio fechas"
+        
+        # Refuerzo para consultas sobre el programa o contenidos de la materia
+        programa_keywords = ["programa", "contenido", "unidad", "temario", "syllabus", "planificación"]
+        if intent == "RAG" and any(kw in rewritten.lower() for kw in programa_keywords):
+            if "fundamentación" not in rewritten.lower():
+                rewritten = f"{rewritten} Unidad temática fundamentación contenidos objetivos"
             
         logger.info("Query & Intent: '%s' -> '%s' [%s]", current_query, rewritten, intent)
         return rewritten, intent, calendar_entities

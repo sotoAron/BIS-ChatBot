@@ -184,6 +184,15 @@ class VectorStore:
             logger.info("Eliminados %d chunks de '%s'.", len(ids), source)
         return len(ids)
 
+    def purge(self) -> None:
+        """Elimina la colección completa. Útil para migraciones de esquema de metadata."""
+        try:
+            self._client.delete_collection(COLLECTION_NAME)
+            logger.warning("Colección '%s' eliminada completamente.", COLLECTION_NAME)
+            self._collection = self._get_or_create_collection()
+        except Exception as e:
+            logger.error("Error al purgar colección: %s", e)
+
     def count(self) -> int:
         """Retorna el número total de documentos en la colección."""
         return self._collection.count()

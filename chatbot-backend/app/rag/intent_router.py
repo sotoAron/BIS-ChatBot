@@ -26,6 +26,7 @@ class Intent(str, Enum):
     ESCALATION = "ESCALATION"
     OOD = "OOD"
     RAG = "RAG"
+    EXAMS = "EXAMS"
 
 
 class IntentRouter:
@@ -40,6 +41,18 @@ class IntentRouter:
             Intent.GREETING,
             r"^(hola|buen dia|buen día|buenas tardes|buenas noches|buenas|saludos)\b"
         ),
+        (
+            Intent.COURSES,
+            r"\b(materias|cursos|inscripto|cursando|inscrito|anotado)\b"
+        ),
+        (
+            Intent.GRADES,
+            r"\b(notas|calificaciones|nota|calificacion|aprobado)\b"
+        ),
+        (
+            Intent.ASSIGNMENTS,
+            r"\b(tareas|entregas|trabajos|tps|pendientes)\b"
+        ),
     ]
 
     DESTINATIONS = {
@@ -52,6 +65,7 @@ class IntentRouter:
         Intent.ESCALATION: "System: Static Escalation Message",
         Intent.OOD: "System: Static Out of Domain Message",
         Intent.RAG: "Motor RAG (Búsqueda Vectorial en ChromaDB + Inyección de Contexto)",
+        Intent.EXAMS: "Motor RAG Ampliado (Búsqueda Vectorial con Contexto Extendido)",
     }
 
     @classmethod

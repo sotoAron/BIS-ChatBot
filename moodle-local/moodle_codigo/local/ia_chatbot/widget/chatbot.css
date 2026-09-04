@@ -73,21 +73,23 @@
   height: var(--chatbot-toggle-size);
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, var(--chatbot-primary), var(--chatbot-accent));
+  background: var(--chatbot-primary); /* Mismo azul que el título y botón (#0f6cbf) */
   color: var(--chatbot-text-on-primary);
   cursor: pointer;
-  box-shadow: var(--chatbot-shadow-md);
+  box-shadow: 0 4px 16px rgba(15, 108, 191, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.25s var(--chatbot-transition),
-              box-shadow 0.25s var(--chatbot-transition-fast);
+              box-shadow 0.25s var(--chatbot-transition-fast),
+              background 0.25s ease;
   outline: none;
 }
 
 .ia-chatbot-toggle:hover {
   transform: scale(1.08) translateY(-2px);
-  box-shadow: var(--chatbot-shadow-lg);
+  box-shadow: 0 8px 24px rgba(15, 108, 191, 0.5);
+  background: var(--chatbot-primary-dark);
 }
 
 .ia-chatbot-toggle:focus-visible {
@@ -100,14 +102,35 @@
 }
 
 .ia-chatbot-toggle__icon {
-  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
-  transition: transform 0.3s var(--chatbot-transition);
+  transition: transform 0.28s var(--chatbot-transition), opacity 0.2s ease;
 }
 
-/* Gira el ícono cuando el panel está abierto */
-.ia-chatbot-toggle[aria-expanded="true"] .ia-chatbot-toggle__icon {
-  transform: rotate(90deg) scale(0.85);
+/* Ícono Robot (visible cuando el chat está cerrado) */
+.ia-chatbot-toggle__icon--robot {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+/* Ícono X de Cerrar (oculto cuando el chat está cerrado) */
+.ia-chatbot-toggle__icon--close {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.6) rotate(-90deg);
+}
+
+/* Cuando el panel está abierto (aria-expanded="true"): ocultar robot y mostrar X */
+.ia-chatbot-toggle[aria-expanded="true"] .ia-chatbot-toggle__icon--robot {
+  opacity: 0;
+  transform: scale(0.6) rotate(90deg);
+}
+
+.ia-chatbot-toggle[aria-expanded="true"] .ia-chatbot-toggle__icon--close {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
 }
 
 /* Badge de notificación (sin usar en Fase 1, listo para Fase 4) */
@@ -167,9 +190,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--chatbot-primary), var(--chatbot-accent));
-  color: var(--chatbot-text-on-primary);
+  background: var(--chatbot-primary); /* Mismo azul que el botón Enviar (#0f6cbf) */
+  color: #ffffff;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(15, 108, 191, 0.2);
 }
 
 .ia-chatbot-panel__title {
@@ -177,6 +201,9 @@
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .ia-chatbot-panel__close {
@@ -229,6 +256,7 @@
   font-size: 13.5px;
   line-height: 1.55;
   word-break: break-word;
+  white-space: pre-wrap;
   animation: chatbot-bubble-in 0.22s var(--chatbot-transition) both;
 }
 
@@ -317,16 +345,18 @@
   resize: none;
   border: 1.5px solid var(--chatbot-border);
   border-radius: 12px;
-  padding: 9px 13px;
+  padding: 10px 13px;
   font-size: 13.5px;
-  line-height: 1.5;
+  line-height: 1.35;
   color: var(--chatbot-text);
   background: var(--chatbot-surface-alt);
   outline: none;
+  min-height: 40px;
   max-height: 110px;
-  overflow-y: auto;
+  overflow-y: hidden; /* Oculta scrollbar hasta que sea necesario */
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 .ia-chatbot-panel__input:focus {
@@ -337,6 +367,9 @@
 
 .ia-chatbot-panel__input::placeholder {
   color: var(--chatbot-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ia-chatbot-panel__send {

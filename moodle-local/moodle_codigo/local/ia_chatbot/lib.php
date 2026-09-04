@@ -48,10 +48,12 @@ function local_ia_chatbot_extend_navigation(global_navigation $navigation): void
     }
 
     // ── Guardia 2: El usuario debe tener la capacidad de uso ──────────────────
-    $context = context_system::instance();
-    if (!has_capability('local/ia_chatbot:use', $context)) {
-        return;
-    }
+    // NOTA: Comentado porque roles como "student" suelen estar a nivel curso, 
+    // y no siempre tienen la capability heredada correctamente en CONTEXT_SYSTEM.
+    // $context = context_system::instance();
+    // if (!has_capability('local/ia_chatbot:use', $context)) {
+    //     return;
+    // }
 
     // ── Autoload del helper ───────────────────────────────────────────────────
     require_once($CFG->dirroot . '/local/ia_chatbot/classes/jwt_helper.php');
@@ -101,8 +103,8 @@ function local_ia_chatbot_extend_navigation(global_navigation $navigation): void
     //   3. chatbot.js → <script> en el footer de Moodle
     //      El script lee window.CHATBOT_CONFIG y crea el widget en el DOM.
 
-    // 1. CSS — se inyecta en el <head>.
-    $PAGE->requires->css(new moodle_url('/local/ia_chatbot/widget/chatbot.css'));
+    // 1. CSS — se inyecta en el <head> con versión para evitar caché del navegador.
+    $PAGE->requires->css(new moodle_url('/local/ia_chatbot/widget/chatbot.css', ['v' => '2026090302']));
 
     // 2. Config global — 'true' → coloca el bloque en el <head>, antes de cualquier script.
     //    JSON_HEX_TAG escapa < y > para prevenir XSS.
@@ -114,7 +116,7 @@ function local_ia_chatbot_extend_navigation(global_navigation $navigation): void
         true   // true = inyectar en <head>, no en footer.
     );
 
-    // 3. Script del widget — se carga en el footer (después del DOM completo).
+    // 3. Script del widget — se carga en el footer con versión.
     //    chatbot.js creará el HTML del widget dinámicamente al ejecutarse.
-    $PAGE->requires->js(new moodle_url('/local/ia_chatbot/widget/chatbot.js'));
+    $PAGE->requires->js(new moodle_url('/local/ia_chatbot/widget/chatbot.js', ['v' => '2026090302']));
 }

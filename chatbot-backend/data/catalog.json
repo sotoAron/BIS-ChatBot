@@ -1,0 +1,48 @@
+{
+  "_comment": "Catálogo maestro de entidades académicas. Editar manualmente para agregar carreras, materias o variantes de nombres.",
+  "carreras": [
+    {
+      "id": "isi",
+      "nombre": "Ingeniería en Sistemas de Información",
+      "siglas": ["ISI"],
+      "variantes": ["Sistemas", "Sistemas de Información", "Informática"]
+    },
+    {
+      "id": "iem",
+      "nombre": "Ingeniería Electromecánica",
+      "siglas": ["IEM"],
+      "variantes": ["Electromecánica"]
+    },
+    {
+      "id": "iq",
+      "nombre": "Ingeniería Química",
+      "siglas": ["IQ"],
+      "variantes": ["Química"]
+    }
+  ],
+  "materias": [
+    {
+      "id": "aacsw",
+      "nombre": "Aspectos Avanzados de Calidad de Software",
+      "siglas": ["AACSW"],
+      "variantes": ["Calidad de Software", "Calidad del Software"],
+      "carreras": ["isi"],
+      "nivel": 4
+    },
+    {
+      "id": "agilidad_avanzada",
+      "nombre": "Agilidad Avanzada",
+      "siglas": ["AA"],
+      "variantes": ["Agilidad"],
+      "carreras": ["isi"],
+      "nivel": 4
+    }
+  ],
+  "document_type_rules": {
+    "_comment": "Reglas para clasificar secciones de Moodle en tipos de documento.",
+    "planificacion_section_names": ["planificacion", "planificación"],
+    "chatbot_section_names": ["chatbot", "material chatbot"],
+    "chatbot_course_names": ["material chatbot"],
+    "ignore_section_names": ["tarea", "tareas", "foro", "foros"]
+  }
+}

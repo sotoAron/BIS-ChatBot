@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_ia_chatbot';   // Nombre canónico del plugin.
-$plugin->version   = 2026081900;           // YYYYMMDDXX — formato requerido por Moodle.
+$plugin->version   = 2026090302;           // YYYYMMDDXX — formato requerido por Moodle.
 $plugin->requires  = 2023100900;           // Moodle 4.3 mínimo (build 2023100900).
 $plugin->maturity  = MATURITY_ALPHA;       // Alpha: en desarrollo activo.
-$plugin->release   = '1.0.0-alpha';        // Versión legible para humanos.
+$plugin->release   = '1.1.2';              // Versión con azul unificado (#0f6cbf) y logo de bordes outline.

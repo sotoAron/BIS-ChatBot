@@ -48,6 +48,7 @@ services:
       - ./app:/app/app
       - ./tests:/app/tests
       - ./pytest.ini:/app/pytest.ini
+      - ./data:/app/data
     depends_on:
       redis:
         condition: service_healthy

@@ -37,19 +37,28 @@
   // Esto cubre TODOS los escenarios de carga de Moodle (normal, Boost, AJAX).
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const POLL_INTERVAL_MS = 100;   // Intervalo entre intentos de sondeo.
-  const POLL_MAX_ATTEMPTS = 30;   // 30 × 100 ms = 3 segundos de espera máxima.
+  const POLL_INTERVAL_MS   = 100;   // Intervalo entre intentos de sondeo.
+  const POLL_MAX_ATTEMPTS  = 30;    // 30 × 100 ms = 3 segundos de espera máxima.
+  const DEFAULT_BACKEND_URL = "https://undertake-luckless-endearing.ngrok-free.dev";
 
   /**
-   * Intenta leer window.CHATBOT_CONFIG. Si existe y es válido, arranca el widget.
-   * Si no, programa un reintento después de POLL_INTERVAL_MS.
+   * Intenta leer la configuración global. Si existe y es válida, arranca el widget.
+   * Soporta window.CHATBOT_CONFIG (inyectado por lib.php) y window.IA_CHATBOT_CONFIG con fallback.
    *
    * @param {number} attempt  Número del intento actual (empieza en 0).
    */
   function tryBoot(attempt) {
-    const cfg = window.CHATBOT_CONFIG;
+    const rawCfg = window.CHATBOT_CONFIG || window.IA_CHATBOT_CONFIG;
 
-    if (cfg && cfg.token && cfg.backendUrl) {
+    if (rawCfg && rawCfg.token) {
+      // Resolver la URL del backend con fallback solicitado
+      const backendUrl = (rawCfg.backendUrl || rawCfg.backend_url || DEFAULT_BACKEND_URL).replace(/\/+$/, '');
+      const cfg = {
+        ...rawCfg,
+        backendUrl: backendUrl,
+        backend_url: backendUrl,
+      };
+
       // Config disponible — arrancar el widget.
       boot(cfg);
       return;
@@ -58,7 +67,7 @@
     if (attempt >= POLL_MAX_ATTEMPTS) {
       // Se agotaron los intentos.
       console.warn(
-        '[ia_chatbot] window.CHATBOT_CONFIG no encontrada tras ' +
+        '[ia_chatbot] window.CHATBOT_CONFIG o window.IA_CHATBOT_CONFIG no encontrada tras ' +
         (POLL_MAX_ATTEMPTS * POLL_INTERVAL_MS / 1000) + 's de espera. Widget deshabilitado.'
       );
       return;
@@ -141,7 +150,32 @@
               aria-expanded="false"
               aria-controls="ia-chatbot-panel"
               title="${escHtml(s.open)}">
-        <span class="ia-chatbot-toggle__icon" aria-hidden="true">&#x1F4AC;</span>
+        <!-- Ícono Robot Académico SVG Líneas / Bordes (Outline) -->
+        <span class="ia-chatbot-toggle__icon ia-chatbot-toggle__icon--robot" aria-hidden="true">
+          <svg class="icon-bot" width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Birrete superior (bordes) -->
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M6 9.5V13.5C6 13.5 8.5 15.5 12 15.5C15.5 15.5 18 13.5 18 13.5V9.5" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M22 7V13.5" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="22" cy="13.5" r="0.8" fill="#FFFFFF"/>
+            <!-- Cara del bot (solo contorno/bordes) -->
+            <rect x="5.5" y="11" width="13" height="10" rx="3" stroke="#FFFFFF" stroke-width="1.6"/>
+            <!-- Orejas/antenas (bordes) -->
+            <rect x="3.5" y="13.5" width="2" height="5" rx="1" stroke="#FFFFFF" stroke-width="1.4"/>
+            <rect x="18.5" y="13.5" width="2" height="5" rx="1" stroke="#FFFFFF" stroke-width="1.4"/>
+            <!-- Ojos y boca (puntos y línea blanca) -->
+            <circle cx="9.5" cy="15.5" r="1.2" fill="#FFFFFF"/>
+            <circle cx="14.5" cy="15.5" r="1.2" fill="#FFFFFF"/>
+            <line x1="10" y1="18.5" x2="14" y2="18.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <!-- Ícono X para minimizar (Abierto) -->
+        <span class="ia-chatbot-toggle__icon ia-chatbot-toggle__icon--close" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="5" x2="19" y2="19"/>
+            <line x1="19" y1="5" x2="5" y2="19"/>
+          </svg>
+        </span>
         <span class="ia-chatbot-toggle__badge" id="ia-chatbot-badge" aria-live="polite"></span>
       </button>
 
@@ -153,9 +187,23 @@
            hidden>
 
         <header class="ia-chatbot-panel__header">
-          <h2 id="ia-chatbot-title" class="ia-chatbot-panel__title">${escHtml(s.title)}</h2>
+          <h2 id="ia-chatbot-title" class="ia-chatbot-panel__title">
+            <svg class="icon-bot" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M6 9.5V13.5C6 13.5 8.5 15.5 12 15.5C15.5 15.5 18 13.5 18 13.5V9.5" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M22 7V13.5" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+              <rect x="5.5" y="11" width="13" height="10" rx="3" stroke="#FFFFFF" stroke-width="1.6"/>
+              <rect x="3.5" y="13.5" width="2" height="5" rx="1" stroke="#FFFFFF" stroke-width="1.4"/>
+              <rect x="18.5" y="13.5" width="2" height="5" rx="1" stroke="#FFFFFF" stroke-width="1.4"/>
+              <circle cx="9.5" cy="15.5" r="1.2" fill="#FFFFFF"/>
+              <circle cx="14.5" cy="15.5" r="1.2" fill="#FFFFFF"/>
+              <line x1="10" y1="18.5" x2="14" y2="18.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span>${escHtml(s.title || 'Asistente Académico')}</span>
+          </h2>
           <button id="ia-chatbot-close"
                   class="ia-chatbot-panel__close"
+                  title="Minimizar chat"
                   aria-label="${escHtml(s.close)}">&times;</button>
         </header>
 
@@ -236,9 +284,11 @@
   // 3. PERSISTENCIA DE SESIÓN (SESSIONSTORAGE)
   // ═══════════════════════════════════════════════════════════════════════════
 
+  const HISTORY_KEY = 'ia_chatbot_history_' + cfg.userId;
+
   function saveHistory() {
     try {
-      sessionStorage.setItem('ia_chatbot_history', els.messages.innerHTML);
+      sessionStorage.setItem(HISTORY_KEY, els.messages.innerHTML);
     } catch (e) {
       console.warn('[ia_chatbot] No se pudo guardar el historial en sessionStorage', e);
     }
@@ -246,7 +296,7 @@
 
   function loadHistory() {
     try {
-      const historyHtml = sessionStorage.getItem('ia_chatbot_history');
+      const historyHtml = sessionStorage.getItem(HISTORY_KEY);
       if (historyHtml) {
         els.messages.innerHTML = historyHtml;
         scrollToBottom();
@@ -257,6 +307,16 @@
   }
 
   loadHistory();
+
+  // Limpiar historial al cerrar sesión en Moodle
+  document.addEventListener('click', function (e) {
+    const link = e.target.closest('a');
+    if (link && link.href && link.href.indexOf('logout.php') !== -1) {
+      try {
+        sessionStorage.removeItem(HISTORY_KEY);
+      } catch (err) {}
+    }
+  });
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 4. CONTROL DEL PANEL (abrir / cerrar)
@@ -281,7 +341,6 @@
       if (!state.panelOpen) els.panel.setAttribute('hidden', '');
     }, 320);
     els.toggle.focus();
-    abortSSE();
   }
 
   els.toggle.addEventListener('click', () => {
@@ -301,7 +360,13 @@
 
   els.input.addEventListener('input', () => {
     els.input.style.height = 'auto';
-    els.input.style.height = Math.min(els.input.scrollHeight, 110) + 'px';
+    if (els.input.scrollHeight > 110) {
+      els.input.style.height = '110px';
+      els.input.style.overflowY = 'auto';
+    } else {
+      els.input.style.height = els.input.scrollHeight + 'px';
+      els.input.style.overflowY = 'hidden';
+    }
   });
 
   // Enviar con Enter (Shift+Enter = salto de línea)
@@ -327,7 +392,17 @@
     const div = document.createElement('div');
     div.className = `ia-chatbot-message ia-chatbot-message--${role}`;
     div.setAttribute('role', role === 'user' ? 'listitem' : 'listitem');
-    if (text) div.textContent = text;
+    if (text) {
+      const parts = text.split('\n');
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i].length > 0) {
+          div.appendChild(document.createTextNode(parts[i]));
+        }
+        if (i < parts.length - 1) {
+          div.appendChild(document.createElement('br'));
+        }
+      }
+    }
     els.messages.appendChild(div);
     scrollToBottom();
     // Guardamos si no es un mensaje bot en streaming (esos se guardan en finalizeStreaming)
@@ -447,6 +522,10 @@
    * Cancela la conexión SSE activa si existe.
    */
   function abortSSE() {
+    if (state.abortController) {
+      state.abortController.abort();
+      state.abortController = null;
+    }
     if (state.eventSource) {
       state.eventSource.close();
       state.eventSource = null;
@@ -473,68 +552,32 @@
 
     const typingDots = showTypingIndicator();
 
-    const endpoint = new URL(`${cfg.backendUrl}/api/chat/stream`);
-    endpoint.searchParams.set('token',    state.token);
-    endpoint.searchParams.set('question', question);
-    endpoint.searchParams.set('user_id',  String(cfg.userId));
+    const controller = new AbortController();
+    state.abortController = controller;
 
     let botMsgNode = null;
 
-    const es = new EventSource(endpoint.toString());
-    state.eventSource = es;
+    try {
+      const endpoint = `${cfg.backendUrl}/api/chat/stream`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`,
+          'ngrok-skip-browser-warning': 'true',
+        },
+        body: JSON.stringify({
+          question: question,
+          user_id: cfg.userId,
+          año_academico: "2026",
+          carrera: "",
+        }),
+        signal: controller.signal,
+      });
 
-    // ── Primer evento 'open' ──────────────────────────────────────────────────
-    es.addEventListener('open', () => {
-      typingDots.remove();
-      botMsgNode          = appendMessage('bot', '');
-      state.currentBotMsg = botMsgNode;
-
-      // Añadir cursor de streaming
-      state.cursorNode = document.createElement('span');
-      state.cursorNode.className = 'ia-chatbot-cursor';
-      state.cursorNode.setAttribute('aria-hidden', 'true');
-      botMsgNode.appendChild(state.cursorNode);
-      clearStatus();
-    });
-
-    // ── Evento 'message' — token a token ─────────────────────────────────────
-    es.addEventListener('message', (ev) => {
-      if (!botMsgNode) return;
-
-      let data;
-      try {
-        data = JSON.parse(ev.data);
-      } catch {
-        data = { chunk: ev.data };
-      }
-
-      if (data.chunk) {
-        // Insertar texto antes del cursor
-        const textNode = document.createTextNode(data.chunk);
-        botMsgNode.insertBefore(textNode, state.cursorNode);
-        scrollToBottom();
-      }
-
-      if (data.done) {
-        finalizeStreaming(botMsgNode);
-      }
-    });
-
-    // ── Evento 'done' explícito (server-sent) ─────────────────────────────────
-    es.addEventListener('done', () => {
-      finalizeStreaming(botMsgNode);
-    });
-
-    // ── Errores SSE ───────────────────────────────────────────────────────────
-    es.addEventListener('error', async (ev) => {
-      es.close();
       typingDots.remove();
 
-      // Leer el status del error si el servidor lo envió
-      const httpStatus = ev.status || (ev.target && ev.target.status);
-
-      if (httpStatus === 401 && !retried) {
-        // Token expirado → renovar y reintentar UNA sola vez
+      if (response.status === 401 && !retried) {
         setStatus('Renovando sesión…');
         try {
           await refreshToken();
@@ -546,18 +589,93 @@
         return;
       }
 
-      if (httpStatus === 429) {
-        appendMessage('error', cfg.strings.err429);
-      } else if (httpStatus === 401) {
-        appendMessage('error', cfg.strings.err401);
-      } else if (httpStatus === 0 || !navigator.onLine) {
+      if (!response.ok) {
+        if (response.status === 429) {
+          appendMessage('error', cfg.strings.err429);
+        } else if (response.status === 401) {
+          appendMessage('error', cfg.strings.err401);
+        } else {
+          appendMessage('error', cfg.strings.errGeneric);
+        }
+        setStreaming(false);
+        return;
+      }
+
+      botMsgNode = appendMessage('bot', '');
+      state.currentBotMsg = botMsgNode;
+
+      state.cursorNode = document.createElement('span');
+      state.cursorNode.className = 'ia-chatbot-cursor';
+      state.cursorNode.setAttribute('aria-hidden', 'true');
+      botMsgNode.appendChild(state.cursorNode);
+      clearStatus();
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Mantener fragmento incompleto
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith('data:')) continue;
+
+          const rawData = trimmed.slice(5).trim();
+          if (rawData === '[DONE]') {
+            finalizeStreaming(botMsgNode);
+            return;
+          }
+
+          let data;
+          try {
+            data = JSON.parse(rawData);
+          } catch {
+            data = { chunk: rawData };
+          }
+
+          if (!state.panelOpen) {
+            openPanel();
+          }
+
+          if (data.chunk) {
+            const parts = data.chunk.split('\n');
+            for (let i = 0; i < parts.length; i++) {
+              if (parts[i].length > 0) {
+                botMsgNode.insertBefore(document.createTextNode(parts[i]), state.cursorNode);
+              }
+              if (i < parts.length - 1) {
+                botMsgNode.insertBefore(document.createElement('br'), state.cursorNode);
+              }
+            }
+            scrollToBottom();
+          }
+
+          if (data.done) {
+            finalizeStreaming(botMsgNode);
+            return;
+          }
+        }
+      }
+
+      finalizeStreaming(botMsgNode);
+
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      typingDots.remove();
+      console.error('[ia_chatbot] Error streaming:', err);
+      if (!navigator.onLine) {
         appendMessage('error', cfg.strings.errConnect);
       } else {
         appendMessage('error', cfg.strings.errGeneric);
       }
-
       setStreaming(false);
-    });
+    }
   }
 
   /**
@@ -613,4 +731,6 @@
   } // ── fin de boot(cfg) ─────────────────────────────────────────────────────
 
 })();
+
+
 

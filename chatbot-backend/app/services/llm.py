@@ -43,7 +43,7 @@ class OllamaClient:
         self,
         base_url: str | None = None,
         model: str | None = None,
-        timeout: float = 120.0,
+        timeout: float = 240.0,
     ) -> None:
         settings      = get_settings()
         self._base_url = base_url or settings.ollama_base_url
@@ -58,6 +58,7 @@ class OllamaClient:
         temperature: float = 0.7,
         max_tokens: int = 1024,
         format: str | None = None,
+        num_ctx: int = 2048,
     ) -> AsyncGenerator[str, None]:
         """
         Genera una respuesta en streaming, token a token.
@@ -96,7 +97,7 @@ class OllamaClient:
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
-                "num_ctx": 2048,
+                "num_ctx": num_ctx,
             },
         }
         if format:

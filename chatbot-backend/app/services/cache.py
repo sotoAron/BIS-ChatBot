@@ -40,14 +40,15 @@ import redis.asyncio as aioredis  # type: ignore
 logger = logging.getLogger(__name__)
 
 
-def _make_namespace(año_academico: str, carrera: str, role: str) -> str:
+def _make_namespace(año_academico: str, carrera: str, role: str, materia_id: Optional[str] = None) -> str:
     """
     Genera un namespace corto (8 hex chars) a partir del contexto del usuario.
 
-    El namespace aísla la caché por (año_academico, carrera, role), de modo que
-    la misma pregunta para distintas carreras nunca produce un cache hit cruzado.
+    El namespace aísla la caché por (año_academico, carrera, role, materia_id), de modo que
+    la misma pregunta para distintas carreras o materias nunca produce un cache hit cruzado.
     """
-    raw = f"{año_academico}|{carrera.strip().lower()}|{role.strip().lower()}"
+    materia_str = materia_id.strip().lower() if materia_id else "none"
+    raw = f"{año_academico}|{carrera.strip().lower()}|{role.strip().lower()}|{materia_str}"
     return hashlib.sha256(raw.encode()).hexdigest()[:8]
 
 

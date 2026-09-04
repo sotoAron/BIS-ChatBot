@@ -45,7 +45,7 @@ if ($hassiteconfig) {
         'local_ia_chatbot/backend_url',
         get_string('backend_url', 'local_ia_chatbot'),
         get_string('backend_url_desc', 'local_ia_chatbot'),
-        'http://localhost:8000',   // Valor por defecto.
+        'https://undertake-luckless-endearing.ngrok-free.dev',   // Valor por defecto limpio sin espacios.
         PARAM_URL
     ));
 
